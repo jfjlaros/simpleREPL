@@ -12,8 +12,8 @@ int inc(int a) {
 
 int main(void) {
   while (interface(
-      greet, "greet",
-      inc, "inc"));
+    greet, "greet",
+    inc, "inc"));
 
   return 0;
 }

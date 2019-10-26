@@ -1,6 +1,10 @@
 Simple REPL for C++
 ===================
 
+This library provides a simple way to expose any C/C++ function in a
+`Read-eval-print loop`_ (REPL) interactive environment.
+
+
 Examples
 --------
 
@@ -39,3 +43,4 @@ export some simple arithmetic functions.
 
 .. _demo: https://github.com/jfjlaros/simpleREPL/blob/master/examples/demo/demo.cc
 .. _calculator: https://github.com/jfjlaros/simpleREPL/blob/master/examples/calculator/calculator.cc
+.. _Read-eval-print loop: https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop
