@@ -6,15 +6,14 @@
  *
  * REPL interface.
  */
+
 #include "interface.tcc"
 
 
-/*
 /// @private
-byte _ping(byte data) {
+int _ping(int data) {
   return data;
 }
-*/
 
 
 /**
@@ -23,10 +22,14 @@ byte _ping(byte data) {
  * This function expects parameter pairs (function pointer, documentation).
  *
  * @param args Parameter pairs (function pointer, documentation).
+ *
+ * @return @a true to continue @a false to quit.
  */
 template <class... Args>
 bool interface(Args... args) {
-  return replInterface(args...);
+  return replInterface(
+    //_ping, "ping",
+    args...);
 }
 
 #endif

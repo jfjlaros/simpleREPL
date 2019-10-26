@@ -6,6 +6,7 @@
  *
  * Read values from stdin, execute a function and write the result to stdout.
  */
+
 #include "tuple.tcc"
 
 

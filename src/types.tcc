@@ -2,70 +2,70 @@
 #define SIMPLE_REPL_TYPES_TCC_
 
 /**
- * Type analysis and encoding.
+ * Type analysis and naming.
  */
 
 
 /*
  * Type naming functions.
  */
-inline String _typeof(bool) {
+inline string _typeof(bool) {
   return "bool";
 }
 
-inline String _typeof(char) {
+inline string _typeof(char) {
   return "char";
 }
 
-inline String _typeof(signed char) {
+inline string _typeof(signed char) {
   return "signed char";
 }
 
-inline String _typeof(unsigned char) {
+inline string _typeof(unsigned char) {
   return "unsigned char";
 }
 
-inline String _typeof(short int) {
+inline string _typeof(short int) {
   return "short int";
 }
 
-inline String _typeof(unsigned short int) {
+inline string _typeof(unsigned short int) {
   return "unsigned short int";
 }
 
-inline String _typeof(int) {
+inline string _typeof(int) {
   return "int";
 }
 
-inline String _typeof(unsigned int) {
+inline string _typeof(unsigned int) {
   return "unsigned int";
 }
 
-inline String _typeof(long int) {
+inline string _typeof(long int) {
   return "long int";
 }
 
-inline String _typeof(unsigned long int) {
+inline string _typeof(unsigned long int) {
   return "unsigned long int";
 }
 
-inline String _typeof(long long int) {
+inline string _typeof(long long int) {
   return "long long int";
 }
 
-inline String _typeof(unsigned long long int) {
+inline string _typeof(unsigned long long int) {
   return "unsigned long long int";
 }
 
-inline String _typeof(float) {
+inline string _typeof(float) {
   return "float";
 }
 
-inline String _typeof(double) {
+inline string _typeof(double) {
   return "double";
 }
 
-inline String _typeof(String) {
+inline string _typeof(string) {
   return "string";
 }
 
