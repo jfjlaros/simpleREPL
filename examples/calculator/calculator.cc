@@ -14,7 +14,7 @@ class Calculator {
       return _state;
     }
   private:
-    int _state;
+    int _state = 0;
 };
 
 
