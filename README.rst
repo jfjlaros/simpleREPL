@@ -21,6 +21,8 @@ export two functions.
     Hi world.
     > inc 2
     3
+    > mul 1.2 3
+    3.6
     > exit
 
 Calculator

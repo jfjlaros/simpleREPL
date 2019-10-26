@@ -5,15 +5,20 @@ string greet(string name) {
   return "Hi " + name + ".";
 }
 
-int inc(int a) {
+int increase(int a) {
   return a + 1;
+}
+
+float multiply(float a, int b) {
+  return a * b;
 }
 
 
 int main(void) {
   while (interface(
     greet, "greet",
-    inc, "inc"));
+    increase, "inc",
+    multiply, "mul"));
 
   return 0;
 }
