@@ -32,7 +32,7 @@ using namespace std;
  */
 template <class F, class D>
 void _writeDescription(F f, D name) {
-  cout << name << "; (" << signature(f) << ")" << endl;
+  cout << name << " (" << signature(f) << ")\n";
 }
 
 
@@ -125,11 +125,13 @@ bool replInterface(Args... args) {
   cout << "> ";
   cin >> command;
 
-  if (command == "quit" || command == "exit") {
+  if (command == "exit" || !cin) {
     return false;
   }
   if (command == "help") {
+    cout << "name (return type: parameter types)\n\n";
     _describe(args...);
+    cout << "help (string:)\nexit (void:)\n";
     return true;
   }
 

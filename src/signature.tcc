@@ -71,7 +71,7 @@ string signature(R (*f)(Args...)) {
 /// Void function.
 template <class... Args>
 string signature(void (*f)(Args...)) {
-  return ":" + _parameterTypes(f);
+  return "void:" + _parameterTypes(f);
 }
 
 /// Class member function.
@@ -85,7 +85,7 @@ string signature(R (C::*f)(Args...)) {
 /// Void class member function.
 template <class C, class... Args>
 string signature(void (C::*f)(Args...)) {
-  return ":" + _parameterTypes((void (*)(Args...))f);
+  return "void:" + _parameterTypes((void (*)(Args...))f);
 }
 
 #endif
