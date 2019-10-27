@@ -12,7 +12,7 @@ Demo
 ~~~~
 
 We show how to use simple functions in the demo_ program. In this program we
-export two functions.
+export three functions.
 
 ::
 
