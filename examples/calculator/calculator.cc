@@ -22,9 +22,9 @@ int main(void) {
   Calculator calculator;
 
   while (interface(
-    pack(&calculator, &Calculator::add), "add",
-    pack(&calculator, &Calculator::subtract), "sub",
-    pack(&calculator, &Calculator::show), "show"));
+    pack(&calculator, &Calculator::add), "add", "Add something.",
+    pack(&calculator, &Calculator::subtract), "sub", "Subtract something.",
+    pack(&calculator, &Calculator::show), "show", "Show result."));
 
   return 0;
 }

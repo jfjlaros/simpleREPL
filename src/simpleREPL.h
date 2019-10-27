@@ -28,7 +28,7 @@ int _ping(int data) {
 template <class... Args>
 bool interface(Args... args) {
   return replInterface(
-    //_ping, "ping",
+    //_ping, "ping", "Ping.",
     args...);
 }
 

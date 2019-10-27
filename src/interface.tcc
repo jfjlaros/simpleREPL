@@ -27,12 +27,13 @@ using namespace std;
  *
  * @param f Function pointer.
  * @param name Function name.
+ * @param doc Function documentation.
  *
  * @private
  */
 template <class F, class D>
-void _writeDescription(F f, D name) {
-  cout << name << " (" << signature(f) << ")\n";
+void _writeDescription(F f, D name, D doc) {
+  cout << name << " (" << signature(f) << ") ; " << doc << endl;
 }
 
 
@@ -52,13 +53,14 @@ inline void _describe(void) {}
  *
  * @param f Function pointer.
  * @param name Function name.
+ * @param doc Function documentation.
  * @param args Remaining parameters.
  *
  * @private
  */
 template <class F, class D, class... Args>
-void _describe(F f, D name, Args... args) {
-  _writeDescription(f, name);
+void _describe(F f, D name, D doc, Args... args) {
+  _writeDescription(f, name, doc);
   _describe(args...);
 }
 
@@ -68,8 +70,8 @@ void _describe(F f, D name, Args... args) {
  * @private
  */
 template <class U, class V, class D, class... Args>
-void _describe(Tuple<U, V> t, D name, Args... args) {
-  _writeDescription(t.tail.head, name);
+void _describe(Tuple<U, V> t, D name, D doc, Args... args) {
+  _writeDescription(t.tail.head, name, doc);
   _describe(args...);
 }
 
@@ -91,12 +93,13 @@ inline void _select(string) {}
  * @param command Command name.
  * @param f Function pointer.
  * @param name Function name.
+ * @param doc Function documentation.
  * @param args Remaining parameters.
  *
  * @private
  */
 template <class F, class D, class... Args>
-void _select(string command, F f, D name, Args... args) {
+void _select(string command, F f, D name, D doc, Args... args) {
   if (name == command) {
     eval(f);
     return;
@@ -129,9 +132,9 @@ bool replInterface(Args... args) {
     return false;
   }
   if (command == "help") {
-    cout << "name (return type: parameter types)\n\n";
+    cout << "name (return type: parameter types) ; documentation\n\n";
     _describe(args...);
-    cout << "help (string:)\nexit (void:)\n";
+    cout << "help (string:) ; This help message.\nexit (void:) ; Exit.\n";
     return true;
   }
 

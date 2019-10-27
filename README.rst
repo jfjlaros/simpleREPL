@@ -17,6 +17,19 @@ export three functions.
 ::
 
     $ ./demo
+    > help
+    name (return type: parameter types) ; documentation
+
+    greet (string: string) ; Say hi to someone.
+    inc (int: int) ; Increase an integer value.
+    mul (float: float int) ; Multiply a float with an integer.
+    help (string:) ; This help message.
+    exit (void:) ; Exit.
+
+These are all functions without any side effect.
+
+::
+
     > greet world
     Hi world.
     > inc 2
@@ -30,6 +43,19 @@ Calculator
 
 In the calculator_ program we show how to use class methods. In this program we
 export some simple arithmetic functions.
+
+::
+
+    > help
+    name (return type: parameter types) ; documentation
+
+    add (void: int) ; Add something.
+    sub (void: int) ; Subtract something.
+    show (int:) ; Show result.
+    help (string:) ; This help message.
+    exit (void:) ; Exit.
+
+These functions operate on an object.
 
 ::
 

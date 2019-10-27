@@ -16,9 +16,9 @@ float multiply(float a, int b) {
 
 int main(void) {
   while (interface(
-    greet, "greet",
-    increase, "inc",
-    multiply, "mul"));
+    greet, "greet", "Say hi to someone.",
+    increase, "inc", "Increase an integer value.",
+    multiply, "mul", "Multiply a float with an integer."));
 
   return 0;
 }
