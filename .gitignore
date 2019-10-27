@@ -1,3 +1,5 @@
 *.swp
+examples/adventure/adventure
 examples/calculator/calculator
 examples/demo/demo
+examples/math/math
