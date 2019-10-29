@@ -7,10 +7,9 @@
  * Read values from stdin, execute a function and write the result to stdout.
  */
 
-#include <sstream>
-
 #include "read.tcc"
 #include "tuple.tcc"
+#include "write.tcc"
 
 
 /**
@@ -29,7 +28,7 @@ template <class R, class... Tail, class... Args>
 void _call(void (*)(void), R (*f)(Tail...), Args&... args) {
   R data = f(args...);
 
-  cout << data << endl;
+  _write(&data);
 }
 
 /// @private Void function.
@@ -43,7 +42,7 @@ template <class C, class P, class R, class... Tail, class... Args>
 void _call(void (*)(void), Tuple<C*, R (P::*)(Tail...)> t, Args&... args) {
   R data =(*t.head.*t.tail.head)(args...);
 
-  cout << data << endl;
+  _write(&data);
 }
 
 /// @private Void class member function.
