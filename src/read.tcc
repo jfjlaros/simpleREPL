@@ -3,6 +3,8 @@
 
 #include <boost/io/detail/quoted_manip.hpp>
 
+#include "types.tcc"
+
 
 void _read(string *data) {
   cin >> boost::io::quoted(*data);
@@ -10,7 +12,11 @@ void _read(string *data) {
 
 template<class T>
 void _read(T *data) {
-  cin >> *data;
+  if (!(cin >> *data)) {
+    cout << "Error: expected parameter of type " << _typeof(*data) << endl;
+    cin.clear();
+    cin.ignore();
+  }
 }
 
 #endif

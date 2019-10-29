@@ -81,7 +81,9 @@ void _describe(Tuple<U, V> t, D name, D doc, Args... args) {
  *
  * @private
  */
-inline void _select(string) {}
+inline void _select(string command) {
+  cout << "Error: unknown command: " << command << endl;
+}
 
 /**
  * Select and call a function indexed by @a number.
@@ -139,6 +141,11 @@ bool replInterface(Args... args) {
   }
 
   _select(command, args...);
+
+  getline(cin, command);
+  if (command.length()) {
+    cout << "Warning: ignored \"" << command << "\"" << endl;
+  }
 
   return true;
 }
