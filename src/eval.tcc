@@ -7,6 +7,9 @@
  * Read values from stdin, execute a function and write the result to stdout.
  */
 
+#include <sstream>
+
+#include "read.tcc"
 #include "tuple.tcc"
 
 
@@ -70,7 +73,7 @@ template <class T, class... Tail, class F, class... Args>
 void _call(void (*f_)(T, Tail...), F f, Args&... args) {
   T data;
 
-  cin >> data;
+  _read(&data);
   _call((void (*)(Tail...))f_, f, args..., data);
 }
 
@@ -79,7 +82,7 @@ template <class T, class... Tail, class F, class... Args>
 void _call(void (*f_)(T&, Tail...), F f, Args&... args) {
   T data;
 
-  cin >> data;
+  _read(&data);
   _call((void (*)(Tail...))f_, f, args..., data);
 }
 
