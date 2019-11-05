@@ -2,6 +2,7 @@
 
 using namespace std;
 
+#include "read.tcc"
 #include "tuple.tcc"
 #include "types.tcc"
 #include "write.tcc"
@@ -9,51 +10,6 @@ using namespace std;
 struct Required {};
 
 #define _req Required()
-
-
-/*
- * Make a parameter list.
- */
-template <class T, class... Args>
-Tuple<Args...> f2t(T (*)(Args...)) {
-  Tuple<Args...> t;
-
-  return t;
-}
-
-
-/*
- * Update a parameter list with default values.
- */
-inline void update(Tuple<>&, Tuple<>&) {}
-
-template <class T, class U, class... Args>
-void update(T& t, Tuple<U, Required, Args...>& u){
-  update(t.tail, u.tail.tail);
-}
-
-template <class T, class U>
-void update(T& t, U& u) {
-  t.head = u.tail.head;
-  update(t.tail, u.tail.tail);
-}
-
-
-/*
- * Modify a parameter list.
- */
-template <class T>
-inline void modify(Tuple<>&, Tuple<>&, string, T) {}
-
-template <class U, class... Args, class V, class T>
-void modify(Tuple<U, Args...>& t, V& u, string name, T value) {
-  if (u.head == name) {
-    t.head = *(U*)&value;
-    return;
-  }
-
-  modify(t.tail, u.tail.tail, name, value);
-}
 
 
 /*
@@ -66,9 +22,144 @@ void show(Args...) {
 
 
 /*
+ * Count the number of required parameters.
+ */
+inline int countRequired(Tuple<>&, int count) {
+  return count;
+}
+
+template <class T, class... Args>
+int countRequired(Tuple<T, Required, Args...>& t, int count) {
+  return countRequired(t.tail.tail, count + 1);
+}
+
+template <class T>
+int countRequired(T& t, int count) {
+  return countRequired(t.tail.tail, count);
+}
+
+
+/*
+ * Set default parameter values.
+ */
+inline void setDefault(Tuple<>&, Tuple<>&) {}
+
+template <class T, class U, class... Args>
+void setDefault(T& t, Tuple<U, Required, Args...>& u) {
+  setDefault(t.tail, u.tail.tail);
+}
+
+template <class T, class U>
+void setDefault(T& t, U& u) {
+  t.head = u.tail.head;
+  setDefault(t.tail, u.tail.tail);
+}
+
+
+/*
+ * Update an optional parameter value.
+ */
+template <class T>
+inline void updateOptional(Tuple<>&, Tuple<>&, string, T) {}
+
+/*
+ * The assignment of @t.head can only be done if the types of @t.head and @a
+ * value are the same. It is possible to merge this function with the next one,
+ * by using the following construct, but it would not be type safe anymore.
+ *
+ *     t.head = *(T*)&value;
+ */
+template <class T, class... Args, class U>
+void updateOptional(Tuple<T, Args...>& t, U& u, string name, T value) {
+  if (u.head == name) {
+    t.head = value;
+    return;
+  }
+
+  updateOptional(t.tail, u.tail.tail, name, value);
+}
+
+template <class T, class... Args, class U, class V>
+void updateOptional(Tuple<T, Args...>& t, U& u, string name, V value) {
+  updateOptional(t.tail, u.tail.tail, name, value);
+}
+
+
+/*
+ * Update a required parameter value.
+ */
+template <class T>
+inline void updateRequired(Tuple<>&, Tuple<>&, int, int, T) {}
+
+/*
+ * As mentioned in the documentation of @updateOptional(), this function can be
+ * merged with the next one at the cost of type safely.
+ */
+template <class T, class... Args, class U, class... Tail>
+void updateRequired(
+    Tuple<T, Args...>& t, Tuple<U, Required, Tail...>& u,
+    int number, int count, T value) {
+  if (number == count) {
+    t.head = value;
+    return;
+  }
+
+  updateRequired(t.tail, u.tail.tail, number, count + 1, value);
+}
+
+template <class T, class U, class... Tail, class V>
+void updateRequired(
+    T& t, Tuple<U, Required, Tail...>& u, int number, int count, V value) {
+  updateRequired(t.tail, u.tail.tail, number, count + 1, value);
+}
+
+template <class T, class U, class V>
+void updateRequired(T& t, U& u, int number, int count, V value) {
+  updateRequired(t.tail, u.tail.tail, number, count, value);
+}
+
+
+/*
+ * Flip a flag.
+ */
+inline void flip(Tuple<>&, Tuple<>&, string) {}
+
+template <class T>
+void flip(T& t, T& u, string name) {
+  if (u.head == name) {
+    t.head = !t.head;
+    return;
+  }
+
+  flip(t.tail, u.tail.tail, name);
+}
+
+template <class T, class U>
+void flip(T& t, U& u, string name) {
+  flip(t.tail, u.tail.tail, name);
+}
+
+
+/*
+ * Call a function.
+ */
+template <class F, class... Args>
+void call(void (*)(void), F f, Tuple<>&, Args&... args) {
+  f(args...);
+}
+
+template <class T, class... Tail, class F, class U, class... Args>
+void call(void (*f_)(T, Tail...), F f, U& t, Args&... args) {
+  call((void (*)(Tail...))f_, f, t.tail, args..., t.head);
+}
+
+
+/*
  * Test.
  */
-long f(int, string, bool, float, int) {
+long f(int i, string s, bool b, float g, int j) {
+  cout << "f: " << i << " " << s << " " << b << " " << g << " " << j << endl;
+
   return 0;
 }
 
@@ -76,22 +167,49 @@ template <class T, class... Args, class U>
 void test(T (*f)(Args...), U u) {
   Tuple<Args...> t;
 
+  cout << "Required: " << countRequired(u, 0) << endl;
+
   cout << "Uninitialised." << endl;
   _write(&t);
 
-  update(t, u);
+  setDefault(t, u);
   cout << "Defaults added." << endl;
   _write(&t);
 
-  modify(t, u, "b", (string)"hello");
-  modify(t, u, "e", 18);
+  /*
+  1. Set number of required parameters read to 0.
+  2. Read one token from stdin, if EOL go to 7.
+  3. Check whether token is a name (starts with a dash, has at lease one letter).
+  4. If 3. is true, get the type of the parameter and read its value from stdin.
+     - NOTE: booleans
+  5. If 3. is false, get the type of the next required parameter and read its
+    value from stdin.
+  6. Go to 2.
+  7. If all required parameters have been read, succeed, fail otherwise.
+  */
+
+  updateOptional(t, u, "b", string("hello"));
+  updateOptional(t, u, "e", 18);
   cout << "Required parameters provided." << endl;
   _write(&t);
 
-  modify(t, u, "c", false);
-  modify(t, u, "d", (float)1.2);
+  flip(t, u, "c");
+  updateOptional(t, u, "d", 1.2F);
   cout << "Optional parameters provided." << endl;
   _write(&t);
+
+  updateRequired(t, u, 0, 0, string("world"));
+  _write(&t);
+  updateRequired(t, u, 1, 0, 19);
+  _write(&t);
+
+
+  call((void (*)(Args...))f, f, t);
+
+  int i; double d;
+  _convert(i, "123");
+  _convert(d, "123.456");
+  cout << i << " " << d << endl;
 }
 
 

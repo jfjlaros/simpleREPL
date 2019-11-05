@@ -6,6 +6,23 @@
 #include "types.tcc"
 
 
+void _convert(int& data, string s) {
+  data = stoi(s);
+}
+
+void _convert(float& data, string s) {
+  data = stof(s);
+}
+
+void _convert(double& data, string s) {
+  data = stod(s);
+}
+
+void _convert(string& data, string s) {
+  data = s;
+}
+
+
 void _read(string *data) {
   cin >> boost::io::quoted(*data);
 }
