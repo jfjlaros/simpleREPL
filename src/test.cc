@@ -24,18 +24,40 @@ void show(Args...) {
 /*
  * Count the number of required parameters.
  */
-inline int countRequired(Tuple<>&, int count) {
+inline int requiredParameters(Tuple<>&, int count) {
   return count;
 }
 
 template <class T, class... Tail>
-int countRequired(Tuple<T, Required, Tail...>& t, int count) {
-  return countRequired(t.tail.tail, count + 1);
+int requiredParameters(Tuple<T, Required, Tail...>& t, int count) {
+  return requiredParameters(t.tail.tail, count + 1);
 }
 
 template <class T>
-int countRequired(T& t, int count) {
-  return countRequired(t.tail.tail, count);
+int requiredParameters(T& t, int count) {
+  return requiredParameters(t.tail.tail, count);
+}
+
+
+/*
+ * Check whether a parameter is a boolean.
+ */
+inline bool isFlag(Tuple<>&, Tuple<>&, string) {
+  return false;
+}
+
+template <class... Tail, class U>
+bool isFlag(Tuple<bool, Tail...>& t, U& u, string name) {
+  if (u.head == name) {
+    return true;
+  }
+
+  return isFlag(t.tail, u.tail.tail, name);
+}
+
+template <class T, class U>
+bool isFlag(T& t, U& u, string name) {
+  return isFlag(t.tail, u.tail.tail, name);
 }
 
 
@@ -80,7 +102,8 @@ inline void updateRequired(Tuple<>&, Tuple<>&, int, int, string) {}
 
 template <class T, class U, class... Tail>
 void updateRequired(
-    T& t, Tuple<U, Required, Tail...>& u, int number, int count, string value) {
+    T& t, Tuple<U, Required, Tail...>& u,
+    int number, int count, string value) {
   if (number == count) {
     _convert(&t.head, value);
     return;
@@ -143,8 +166,10 @@ template <class T, class... Tail, class U>
 void test(T (*f)(Tail...), U u) {
   Tuple<Tail...> t;
 
-  cout << "Required number of parameters: " << countRequired(u, 0) << endl <<
-    endl; 
+  cout << "Required parameters: " << requiredParameters(u, 0) << endl;
+  cout << "\"a\" is a flag? " << isFlag(t, u, "a") << endl;
+  cout << "\"c\" is a flag? " << isFlag(t, u, "c") << endl;
+  cout << "\"d\" is a flag? " << isFlag(t, u, "d") << endl << endl;
 
   setDefault(t, u);
   cout << "Default parameters." << endl;
