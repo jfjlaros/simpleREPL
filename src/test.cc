@@ -28,8 +28,8 @@ inline int countRequired(Tuple<>&, int count) {
   return count;
 }
 
-template <class T, class... Args>
-int countRequired(Tuple<T, Required, Args...>& t, int count) {
+template <class T, class... Tail>
+int countRequired(Tuple<T, Required, Tail...>& t, int count) {
   return countRequired(t.tail.tail, count + 1);
 }
 
@@ -44,8 +44,9 @@ int countRequired(T& t, int count) {
  */
 inline void setDefault(Tuple<>&, Tuple<>&) {}
 
-template <class T, class U, class... Args>
-void setDefault(T& t, Tuple<U, Required, Args...>& u) {
+template <class T, class U, class... Tail>
+void setDefault(T& t, Tuple<U, Required, Tail...>& u) {
+  _convert(&t.head, "0"); // Not strictly needed, but nice for debugging.
   setDefault(t.tail, u.tail.tail);
 }
 
@@ -59,28 +60,15 @@ void setDefault(T& t, U& u) {
 /*
  * Update an optional parameter value.
  */
-template <class T>
-inline void updateOptional(Tuple<>&, Tuple<>&, string, T) {}
+inline void updateOptional(Tuple<>&, Tuple<>&, string, string) {}
 
-/*
- * The assignment of @t.head can only be done if the types of @t.head and @a
- * value are the same. It is possible to merge this function with the next one,
- * by using the following construct, but it would not be type safe anymore.
- *
- *     t.head = *(T*)&value;
- */
-template <class T, class... Args, class U>
-void updateOptional(Tuple<T, Args...>& t, U& u, string name, T value) {
+template <class T, class... Tail, class U>
+void updateOptional(Tuple<T, Tail...>& t, U& u, string name, string value) {
   if (u.head == name) {
-    t.head = value;
+    _convert(&t.head, value);
     return;
   }
 
-  updateOptional(t.tail, u.tail.tail, name, value);
-}
-
-template <class T, class... Args, class U, class V>
-void updateOptional(Tuple<T, Args...>& t, U& u, string name, V value) {
   updateOptional(t.tail, u.tail.tail, name, value);
 }
 
@@ -88,55 +76,43 @@ void updateOptional(Tuple<T, Args...>& t, U& u, string name, V value) {
 /*
  * Update a required parameter value.
  */
-template <class T>
-inline void updateRequired(Tuple<>&, Tuple<>&, int, int, T) {}
+inline void updateRequired(Tuple<>&, Tuple<>&, int, int, string) {}
 
-/*
- * As mentioned in the documentation of @updateOptional(), this function can be
- * merged with the next one at the cost of type safely.
- */
-template <class T, class... Args, class U, class... Tail>
+template <class T, class U, class... Tail>
 void updateRequired(
-    Tuple<T, Args...>& t, Tuple<U, Required, Tail...>& u,
-    int number, int count, T value) {
+    T& t, Tuple<U, Required, Tail...>& u, int number, int count, string value) {
   if (number == count) {
-    t.head = value;
+    _convert(&t.head, value);
     return;
   }
 
   updateRequired(t.tail, u.tail.tail, number, count + 1, value);
 }
 
-template <class T, class U, class... Tail, class V>
-void updateRequired(
-    T& t, Tuple<U, Required, Tail...>& u, int number, int count, V value) {
-  updateRequired(t.tail, u.tail.tail, number, count + 1, value);
-}
-
-template <class T, class U, class V>
-void updateRequired(T& t, U& u, int number, int count, V value) {
+template <class T, class U>
+void updateRequired(T& t, U& u, int number, int count, string value) {
   updateRequired(t.tail, u.tail.tail, number, count, value);
 }
 
 
 /*
- * Flip a flag.
+ * Update a flag.
  */
-inline void flip(Tuple<>&, Tuple<>&, string) {}
+inline void updateFlag(Tuple<>&, Tuple<>&, string) {}
 
-template <class T>
-void flip(T& t, T& u, string name) {
+template <class... Tail, class U>
+void updateFlag(Tuple<bool, Tail...>& t, U& u, string name) {
   if (u.head == name) {
     t.head = !t.head;
     return;
   }
 
-  flip(t.tail, u.tail.tail, name);
+  updateFlag(t.tail, u.tail.tail, name);
 }
 
 template <class T, class U>
-void flip(T& t, U& u, string name) {
-  flip(t.tail, u.tail.tail, name);
+void updateFlag(T& t, U& u, string name) {
+  updateFlag(t.tail, u.tail.tail, name);
 }
 
 
@@ -163,17 +139,15 @@ long f(int i, string s, bool b, float g, int j) {
   return 0;
 }
 
-template <class T, class... Args, class U>
-void test(T (*f)(Args...), U u) {
-  Tuple<Args...> t;
+template <class T, class... Tail, class U>
+void test(T (*f)(Tail...), U u) {
+  Tuple<Tail...> t;
 
-  cout << "Required: " << countRequired(u, 0) << endl;
-
-  cout << "Uninitialised." << endl;
-  _write(&t);
+  cout << "Required number of parameters: " << countRequired(u, 0) << endl <<
+    endl; 
 
   setDefault(t, u);
-  cout << "Defaults added." << endl;
+  cout << "Default parameters." << endl;
   _write(&t);
 
   /*
@@ -188,28 +162,21 @@ void test(T (*f)(Args...), U u) {
   7. If all required parameters have been read, succeed, fail otherwise.
   */
 
-  updateOptional(t, u, "b", string("hello"));
-  updateOptional(t, u, "e", 18);
-  cout << "Required parameters provided." << endl;
+  updateOptional(t, u, "a", "3");
+  updateOptional(t, u, "d", "3.15");
+  cout << "Optional parameters applied." << endl;
   _write(&t);
 
-  flip(t, u, "c");
-  updateOptional(t, u, "d", 1.2F);
-  cout << "Optional parameters provided." << endl;
+  updateFlag(t, u, "c");
+  cout << "Flag parameters applied." << endl;
   _write(&t);
 
-  updateRequired(t, u, 0, 0, string("world"));
+  updateRequired(t, u, 0, 0, "hello");
+  updateRequired(t, u, 1, 0, "18");
+  cout << "Required parameters applied." << endl;
   _write(&t);
-  updateRequired(t, u, 1, 0, 19);
-  _write(&t);
 
-
-  call((void (*)(Args...))f, f, t);
-
-  int i; double d;
-  _convert(i, "123");
-  _convert(d, "123.456");
-  cout << i << " " << d << endl;
+  call((void (*)(Tail...))f, f, t);
 }
 
 
@@ -221,14 +188,14 @@ int main(void) {
   "a" optional, default value = 2.
   "b" mandatory.
   "c" a flag, default value = true.
-  "d" optional, default value = 3.14.
+  "d" optional, default value = 3.14F.
   "e" mandatory.
 
-    ("a", 2, "b", _req, "c", true, "d", 3.14, "e", _req)
+    ("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req)
 
   Make tuple:
 
-    (int 2, string undef, bool true, float 3.14, int undef)
+    (int 2, string undef, bool true, float 3.14F, int undef)
 
     f -d 1.2 "hello" -c 18
 
@@ -241,7 +208,7 @@ int main(void) {
   call f
   */
 
-  test(f, pack("a", 2, "b", _req, "c", true, "d", 3.14, "e", _req));
+  test(f, pack("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req));
 
   return 0;
 }
