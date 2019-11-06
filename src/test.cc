@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -153,6 +154,48 @@ void call(void (*f_)(T, Tail...), F f, U& t, Args&... args) {
 }
 
 
+template <class T, class... Tail, class U>
+void interface(T (*f)(Tail...), U u) {
+  int required = requiredParameters(u, 0),
+      number = 0;
+  string line,
+         parameter,
+         value;
+  istringstream iss;
+  Tuple<Tail...> t;
+
+  setDefault(t, u);
+
+  getline(cin, line);
+  iss.str(line);
+
+  while (iss >> parameter) {
+    if (parameter[0] == '-') {
+      parameter.erase(0, 1);
+
+      if (isFlag(t, u, parameter)) {
+        updateFlag(t, u, parameter);
+      }
+      else {
+        iss >> value;
+        updateOptional(t, u, parameter, value);
+      }
+    }
+    else {
+      updateRequired(t, u, number, 0, parameter);
+      number++;
+    }
+  }
+
+  if (number >= required) {
+    call((void (*)(Tail...))f, f, t);
+  }
+  else {
+    cout << "Required parameter missing." << endl;
+  }
+}
+
+
 /*
  * Test.
  */
@@ -162,78 +205,10 @@ long f(int i, string s, bool b, float g, int j) {
   return 0;
 }
 
-template <class T, class... Tail, class U>
-void test(T (*f)(Tail...), U u) {
-  Tuple<Tail...> t;
-
-  cout << "Required parameters: " << requiredParameters(u, 0) << endl;
-  cout << "\"a\" is a flag? " << isFlag(t, u, "a") << endl;
-  cout << "\"c\" is a flag? " << isFlag(t, u, "c") << endl;
-  cout << "\"d\" is a flag? " << isFlag(t, u, "d") << endl << endl;
-
-  setDefault(t, u);
-  cout << "Default parameters." << endl;
-  _write(&t);
-
-  /*
-  1. Set number of required parameters read to 0.
-  2. Read one token from stdin, if EOL go to 7.
-  3. Check whether token is a name (starts with a dash, has at lease one letter).
-  4. If 3. is true, get the type of the parameter and read its value from stdin.
-     - NOTE: booleans
-  5. If 3. is false, get the type of the next required parameter and read its
-    value from stdin.
-  6. Go to 2.
-  7. If all required parameters have been read, succeed, fail otherwise.
-  */
-
-  updateOptional(t, u, "a", "3");
-  updateOptional(t, u, "d", "3.15");
-  cout << "Optional parameters applied." << endl;
-  _write(&t);
-
-  updateFlag(t, u, "c");
-  cout << "Flag parameters applied." << endl;
-  _write(&t);
-
-  updateRequired(t, u, 0, 0, "hello");
-  updateRequired(t, u, 1, 0, "18");
-  cout << "Required parameters applied." << endl;
-  _write(&t);
-
-  call((void (*)(Tail...))f, f, t);
-}
-
-
 int main(void) {
-  /* Example.
-
-    void f(int a, string b, bool c, float d, int e) {}
-
-  "a" optional, default value = 2.
-  "b" mandatory.
-  "c" a flag, default value = true.
-  "d" optional, default value = 3.14F.
-  "e" mandatory.
-
-    ("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req)
-
-  Make tuple:
-
-    (int 2, string undef, bool true, float 3.14F, int undef)
-
-    f -d 1.2 "hello" -c 18
-
-  var = 0
-  update "d"
-  update 1st _req ("b"); var++
-  update "c" (negate)
-  update 2nd _req ("e"); var++
-
-  call f
-  */
-
-  test(f, pack("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req));
+  while (cin) {
+    interface(f, pack("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req));
+  }
 
   return 0;
 }
