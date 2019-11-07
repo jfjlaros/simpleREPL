@@ -23,78 +23,49 @@ void show(Args...) {
 
 
 /*
- * Count the number of required parameters.
+ * Set default values and count the number of required parameters.
  */
-inline int requiredParameters(Tuple<>&, int count) {
+inline int setDefault(Tuple<>&, Tuple<>&, int count) {
   return count;
 }
 
-template <class T, class... Tail>
-int requiredParameters(Tuple<T, Required, Tail...>& t, int count) {
-  return requiredParameters(t.tail.tail, count + 1);
-}
-
-template <class T>
-int requiredParameters(T& t, int count) {
-  return requiredParameters(t.tail.tail, count);
-}
-
-
-/*
- * Check whether a parameter is a boolean.
- */
-inline bool isFlag(Tuple<>&, Tuple<>&, string) {
-  return false;
-}
-
-template <class... Tail, class U>
-bool isFlag(Tuple<bool, Tail...>& t, U& u, string name) {
-  if (u.head == name) {
-    return true;
-  }
-
-  return isFlag(t.tail, u.tail.tail, name);
-}
-
-template <class T, class U>
-bool isFlag(T& t, U& u, string name) {
-  return isFlag(t.tail, u.tail.tail, name);
-}
-
-
-/*
- * Set default parameter values.
- */
-inline void setDefault(Tuple<>&, Tuple<>&) {}
-
 template <class T, class U, class... Tail>
-void setDefault(T& t, Tuple<U, Required, Tail...>& u) {
+int setDefault(T& t, Tuple<U, Required, Tail...>& u, int count) {
   _convert(&t.head, "0"); // Not strictly needed, but nice for debugging.
-  setDefault(t.tail, u.tail.tail);
+  return setDefault(t.tail, u.tail.tail, count + 1);
 }
 
 template <class T, class U>
-void setDefault(T& t, U& u) {
+int setDefault(T& t, U& u, int count) {
   t.head = u.tail.head;
-  setDefault(t.tail, u.tail.tail);
+  return setDefault(t.tail, u.tail.tail, count);
 }
 
 
 /*
  * Update an optional parameter value.
  */
-inline void updateOptional(Tuple<>&, Tuple<>&, string, string) {}
+inline void updateOptional(Tuple<>&, Tuple<>&, string) {}
 
-template <class T, class... Tail, class U>
-void updateOptional(Tuple<T, Tail...>& t, U& u, string name, string value) {
+template <class... Tail, class U>
+void updateOptional(Tuple<bool, Tail...>& t, U& u, string name) {
   if (u.head == name) {
-    _convert(&t.head, value);
+    t.head = !t.head;
     return;
   }
 
-  updateOptional(t.tail, u.tail.tail, name, value);
+  updateOptional(t.tail, u.tail.tail, name);
 }
 
+template <class T, class... Tail, class U>
+void updateOptional(Tuple<T, Tail...>& t, U& u, string name) {
+  if (u.head == name) {
+    _convert(&t.head, _readToken());
+    return;
+  }
+
+  updateOptional(t.tail, u.tail.tail, name);
+}
 
 /*
  * Update a required parameter value.
@@ -120,27 +91,6 @@ void updateRequired(T& t, U& u, int number, int count, string value) {
 
 
 /*
- * Update a flag.
- */
-inline void updateFlag(Tuple<>&, Tuple<>&, string) {}
-
-template <class... Tail, class U>
-void updateFlag(Tuple<bool, Tail...>& t, U& u, string name) {
-  if (u.head == name) {
-    t.head = !t.head;
-    return;
-  }
-
-  updateFlag(t.tail, u.tail.tail, name);
-}
-
-template <class T, class U>
-void updateFlag(T& t, U& u, string name) {
-  updateFlag(t.tail, u.tail.tail, name);
-}
-
-
-/*
  * Call a function.
  */
 template <class F, class... Args>
@@ -154,41 +104,33 @@ void call(void (*f_)(T, Tail...), F f, U& t, Args&... args) {
 }
 
 
+/*
+ *
+ */
 template <class T, class... Tail, class U>
 void interface(T (*f)(Tail...), U u) {
-  int required = requiredParameters(u, 0),
-      number = 0;
-  string line,
-         parameter,
-         value;
-  istringstream iss;
   Tuple<Tail...> t;
+  string token;
+  int requiredParameters = setDefault(t, u, 0),
+      number = 0;
 
-  setDefault(t, u);
+  while (!_endOfLine) {
+    token = _readToken();
 
-  getline(cin, line);
-  iss.str(line);
-
-  while (iss >> parameter) {
-    if (parameter[0] == '-') {
-      parameter.erase(0, 1);
-
-      if (isFlag(t, u, parameter)) {
-        updateFlag(t, u, parameter);
-      }
-      else {
-        iss >> value;
-        updateOptional(t, u, parameter, value);
-      }
+    if (token[0] == '-') {
+      updateOptional(t, u, token.substr(1, string::npos));
     }
     else {
-      updateRequired(t, u, number, 0, parameter);
+      updateRequired(t, u, number, 0, token);
       number++;
     }
   }
 
-  if (number >= required) {
+  if (number == requiredParameters) {
     call((void (*)(Tail...))f, f, t);
+  }
+  else if (number > requiredParameters) {
+    cout << "Too many parameters provided." << endl;
   }
   else {
     cout << "Required parameter missing." << endl;
@@ -206,7 +148,10 @@ long f(int i, string s, bool b, float g, int j) {
 }
 
 int main(void) {
-  while (cin) {
+  string s;
+
+  while (!feof(stdin)) {
+    s = _readToken(); // Command.
     interface(f, pack("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req));
   }
 

@@ -5,6 +5,42 @@
 
 #include "types.tcc"
 
+bool _endOfLine = false;
+
+
+string _readToken(void) {
+  string data = "";
+  bool quoted = false;
+  char c = ' ';
+
+  _endOfLine = false;
+
+  while (c == ' ' || c == '\t') {
+    c = getc(stdin);
+  }
+
+  while (c != '\n') {
+    if (!quoted && (c == ' ' || c == '\t')) {
+      return data;
+    }
+    else if (c == '\\') {
+      data += getc(stdin);
+    }
+    else if (c == '"') {
+      quoted = !quoted;
+    }
+    else {
+      data += c;
+    }
+
+    c = getc(stdin);
+  }
+
+  _endOfLine = true;
+
+  return data;
+}
+
 
 void _convert(bool* data, string s) {
   *data = (bool)stoi(s);
