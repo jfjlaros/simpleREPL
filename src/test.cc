@@ -25,20 +25,56 @@ void show(Args...) {
 /*
  * Set default values and count the number of required parameters.
  */
-inline int setDefault(Tuple<>&, Tuple<>&, int count) {
+inline int _setDefault(Tuple<>&, Tuple<>&, int count) {
   return count;
 }
 
 template <class T, class U, class... Tail>
-int setDefault(T& t, Tuple<U, Required, Tail...>& u, int count) {
-  _convert(&t.head, "0"); // Not strictly needed, but nice for debugging.
-  return setDefault(t.tail, u.tail.tail, count + 1);
+int _setDefault(T& argv, Tuple<U, Required, Tail...>& defs, int count) {
+  _convert(&argv.head, "0"); // Not strictly needed, but nice for debugging.
+
+  return _setDefault(argv.tail, defs.tail.tail, count + 1);
 }
 
 template <class T, class U>
-int setDefault(T& t, U& u, int count) {
-  t.head = u.tail.head;
-  return setDefault(t.tail, u.tail.tail, count);
+int _setDefault(T& argv, U& defs, int count) {
+  argv.head = defs.tail.head;
+
+  return _setDefault(argv.tail, defs.tail.tail, count);
+}
+
+template <class T, class U>
+int setDefault(T& argv, U& defs) {
+  return _setDefault(argv, defs, 0);
+}
+
+
+/*
+ * Update a required parameter value.
+ */
+inline void _updateRequired(Tuple<>&, Tuple<>&, int, int, string) {}
+
+template <class T, class U, class... Tail>
+void _updateRequired(
+    T& argv, Tuple<U, Required, Tail...>& defs,
+    int number, int count, string value) {
+  if (number == count) {
+    _convert(&argv.head, value);
+
+    return;
+  }
+
+  _updateRequired(argv.tail, defs.tail.tail, number, count + 1, value);
+}
+
+template <class T, class U>
+void _updateRequired(T& argv, U& defs, int number, int count, string value) {
+  _updateRequired(argv.tail, defs.tail.tail, number, count, value);
+}
+
+template <class T, class U>
+void updateRequired(T& argv, U& defs, int number, string value) {
+  _updateRequired(argv, defs, number, 0, value);
 }
 
 
@@ -48,45 +84,25 @@ int setDefault(T& t, U& u, int count) {
 inline void updateOptional(Tuple<>&, Tuple<>&, string) {}
 
 template <class... Tail, class U>
-void updateOptional(Tuple<bool, Tail...>& t, U& u, string name) {
-  if (u.head == name) {
-    t.head = !t.head;
+void updateOptional(Tuple<bool, Tail...>& argv, U& defs, string name) {
+  if (defs.head == name) {
+    argv.head = !argv.head;
+
     return;
   }
 
-  updateOptional(t.tail, u.tail.tail, name);
+  updateOptional(argv.tail, defs.tail.tail, name);
 }
 
 template <class T, class... Tail, class U>
-void updateOptional(Tuple<T, Tail...>& t, U& u, string name) {
-  if (u.head == name) {
-    _convert(&t.head, _readToken());
+void updateOptional(Tuple<T, Tail...>& argv, U& defs, string name) {
+  if (defs.head == name) {
+    _convert(&argv.head, _readToken());
+
     return;
   }
 
-  updateOptional(t.tail, u.tail.tail, name);
-}
-
-/*
- * Update a required parameter value.
- */
-inline void updateRequired(Tuple<>&, Tuple<>&, int, int, string) {}
-
-template <class T, class U, class... Tail>
-void updateRequired(
-    T& t, Tuple<U, Required, Tail...>& u,
-    int number, int count, string value) {
-  if (number == count) {
-    _convert(&t.head, value);
-    return;
-  }
-
-  updateRequired(t.tail, u.tail.tail, number, count + 1, value);
-}
-
-template <class T, class U>
-void updateRequired(T& t, U& u, int number, int count, string value) {
-  updateRequired(t.tail, u.tail.tail, number, count, value);
+  updateOptional(argv.tail, defs.tail.tail, name);
 }
 
 
@@ -94,40 +110,45 @@ void updateRequired(T& t, U& u, int number, int count, string value) {
  * Call a function.
  */
 template <class F, class... Args>
-void call(void (*)(void), F f, Tuple<>&, Args&... args) {
+void _call(void (*)(void), F f, Tuple<>&, Args&... args) {
   f(args...);
 }
 
 template <class T, class... Tail, class F, class U, class... Args>
-void call(void (*f_)(T, Tail...), F f, U& t, Args&... args) {
-  call((void (*)(Tail...))f_, f, t.tail, args..., t.head);
+void _call(void (*f_)(T, Tail...), F f, U& argv, Args&... args) {
+  _call((void (*)(Tail...))f_, f, argv.tail, args..., argv.head);
+}
+
+template <class T, class... Tail, class U>
+void call(T (*f)(Tail...), U& argv) {
+  _call((void (*)(Tail...))f, f, argv);
 }
 
 
 /*
- *
+ * Parse command line parameters.
  */
 template <class T, class... Tail, class U>
-void interface(T (*f)(Tail...), U u) {
-  Tuple<Tail...> t;
+void interface(T (*f)(Tail...), U defs) {
+  Tuple<Tail...> argv;
   string token;
-  int requiredParameters = setDefault(t, u, 0),
+  int requiredParameters = setDefault(argv, defs),
       number = 0;
 
   while (!_endOfLine) {
     token = _readToken();
 
     if (token[0] == '-') {
-      updateOptional(t, u, token.substr(1, string::npos));
+      updateOptional(argv, defs, token.substr(1, string::npos));
     }
     else {
-      updateRequired(t, u, number, 0, token);
+      updateRequired(argv, defs, number, token);
       number++;
     }
   }
 
   if (number == requiredParameters) {
-    call((void (*)(Tail...))f, f, t);
+    call(f, argv);
   }
   else if (number > requiredParameters) {
     cout << "Too many parameters provided." << endl;
@@ -146,6 +167,7 @@ long f(int i, string s, bool b, float g, int j) {
 
   return 0;
 }
+
 
 int main(void) {
   string s;
