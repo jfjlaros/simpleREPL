@@ -126,6 +126,58 @@ void call(T (*f)(Tail...), U& argv) {
 
 
 /*
+ * Help.
+ */
+void _helpOptional(void (*)(void), Tuple<>&) {}
+
+template <class T, class... Tail, class U, class... Args>
+void _helpOptional(void (*f)(T, Tail...), Tuple<U, Required, Args...>& argv) {
+  _helpOptional((void (*)(Tail...))f, argv.tail.tail);
+}
+
+template <class... Tail, class U>
+void _helpOptional(void (*f)(bool, Tail...), U& argv) {
+  cout << "  -" << argv.head  << " (type flag)\n";
+  _helpOptional((void (*)(Tail...))f, argv.tail.tail);
+}
+
+template <class T, class... Tail, class U>
+void _helpOptional(void (*f)(T, Tail...), U& argv) {
+  T data;
+
+  cout << "  -" << argv.head  << " (type " << _typeof(data) << ", default: " <<
+    argv.tail.head << ")\n";
+  _helpOptional((void (*)(Tail...))f, argv.tail.tail);
+}
+
+void _helpRequired(void (*)(void), Tuple<>&) {}
+
+template <class T, class... Tail, class U, class... Args>
+void _helpRequired(void (*f)(T, Tail...), Tuple<U, Required, Args...>& argv) {
+  T data;
+
+  cout << "  " << argv.head  << " (type " << _typeof(data) << ")\n";
+  _helpRequired((void (*)(Tail...))f, argv.tail.tail);
+}
+
+template <class T, class... Tail, class U>
+void _helpRequired(void (*f)(T, Tail...), U& argv) {
+  _helpRequired((void (*)(Tail...))f, argv.tail.tail);
+}
+
+template <class T, class... Tail, class U>
+void help(T (*f)(Tail...), string name, U argv) { // U&
+  T data;
+
+  cout << "Help on " << name << "\n\nRequired parameters:\n\n";
+  _helpRequired((void (*)(Tail...))f, argv);
+  cout << "\nOptional parameters:\n\n";
+  _helpOptional((void (*)(Tail...))f, argv);
+  cout << endl << "returns " << _typeof(data) << endl;
+}
+
+
+/*
  * Parse command line parameters.
  */
 template <class T, class... Tail, class U>
@@ -172,10 +224,11 @@ long f(int i, string s, bool b, float g, int j) {
 int main(void) {
   string s;
 
-  while (!feof(stdin)) {
-    s = _readToken(); // Command.
-    interface(f, pack("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req));
-  }
+  //while (!feof(stdin)) {
+  //  s = _readToken(); // Command.
+  //  interface(f, pack("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req));
+  //}
+  help(f, "f", pack("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req));
 
   return 0;
 }
