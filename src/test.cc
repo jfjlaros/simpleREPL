@@ -29,18 +29,18 @@ inline int _setDefault(Tuple<>&, Tuple<>&, int count) {
   return count;
 }
 
-template <class T, class U, class... Tail>
-int _setDefault(T& argv, Tuple<U, Required, Tail...>& defs, int count) {
+template <class T, class... Tail>
+int _setDefault(T& argv, Tuple<Tuple<const char*>, Tail...>& defs, int count) {
   _convert(&argv.head, "0"); // Not strictly needed, but nice for debugging.
 
-  return _setDefault(argv.tail, defs.tail.tail, count + 1);
+  return _setDefault(argv.tail, defs.tail, count + 1);
 }
 
 template <class T, class U>
 int _setDefault(T& argv, U& defs, int count) {
-  argv.head = defs.tail.head;
+  argv.head = defs.head.tail.head;
 
-  return _setDefault(argv.tail, defs.tail.tail, count);
+  return _setDefault(argv.tail, defs.tail, count);
 }
 
 template <class T, class U>
@@ -54,9 +54,9 @@ int setDefault(T& argv, U& defs) {
  */
 inline void _updateRequired(Tuple<>&, Tuple<>&, int, int, string) {}
 
-template <class T, class U, class... Tail>
+template <class T, class... Tail>
 void _updateRequired(
-    T& argv, Tuple<U, Required, Tail...>& defs,
+    T& argv, Tuple<Tuple<const char*>, Tail...>& defs,
     int number, int count, string value) {
   if (number == count) {
     _convert(&argv.head, value);
@@ -64,12 +64,12 @@ void _updateRequired(
     return;
   }
 
-  _updateRequired(argv.tail, defs.tail.tail, number, count + 1, value);
+  _updateRequired(argv.tail, defs.tail, number, count + 1, value);
 }
 
 template <class T, class U>
 void _updateRequired(T& argv, U& defs, int number, int count, string value) {
-  _updateRequired(argv.tail, defs.tail.tail, number, count, value);
+  _updateRequired(argv.tail, defs.tail, number, count, value);
 }
 
 template <class T, class U>
@@ -85,24 +85,24 @@ inline void updateOptional(Tuple<>&, Tuple<>&, string) {}
 
 template <class... Tail, class U>
 void updateOptional(Tuple<bool, Tail...>& argv, U& defs, string name) {
-  if (defs.head == name) {
+  if (defs.head.head == name) {
     argv.head = !argv.head;
 
     return;
   }
 
-  updateOptional(argv.tail, defs.tail.tail, name);
+  updateOptional(argv.tail, defs.tail, name);
 }
 
 template <class T, class... Tail, class U>
 void updateOptional(Tuple<T, Tail...>& argv, U& defs, string name) {
-  if (defs.head == name) {
+  if (defs.head.head == name) {
     _convert(&argv.head, _readToken());
 
     return;
   }
 
-  updateOptional(argv.tail, defs.tail.tail, name);
+  updateOptional(argv.tail, defs.tail, name);
 }
 
 
@@ -128,41 +128,45 @@ void call(T (*f)(Tail...), U& argv) {
 /*
  * Help.
  */
+void _helpRequired(void (*)(void), Tuple<>&) {}
+
+template <class T, class... Tail, class U, class... Args>
+void _helpRequired(
+    void (*f)(T, Tail...), Tuple<Tuple<U, Required>, Args...>& argv) {
+  T data;
+
+  cout << "  " << argv.head.head  << " (type " << _typeof(data) << ")\n";
+  _helpRequired((void (*)(Tail...))f, argv.tail);
+}
+
+template <class T, class... Tail, class U>
+void _helpRequired(void (*f)(T, Tail...), U& argv) {
+  _helpRequired((void (*)(Tail...))f, argv.tail);
+}
+
 void _helpOptional(void (*)(void), Tuple<>&) {}
 
 template <class T, class... Tail, class U, class... Args>
-void _helpOptional(void (*f)(T, Tail...), Tuple<U, Required, Args...>& argv) {
-  _helpOptional((void (*)(Tail...))f, argv.tail.tail);
+void _helpOptional(
+    void (*f)(T, Tail...), Tuple<Tuple<U, Required>, Args...>& argv) {
+  _helpOptional((void (*)(Tail...))f, argv.tail);
 }
 
 template <class... Tail, class U>
 void _helpOptional(void (*f)(bool, Tail...), U& argv) {
-  cout << "  -" << argv.head  << " (type flag)\n";
-  _helpOptional((void (*)(Tail...))f, argv.tail.tail);
+  cout << "  -" << argv.head.head  << " " << argv.head.tail.tail.head <<
+    " (type flag)\n";
+  _helpOptional((void (*)(Tail...))f, argv.tail);
 }
 
 template <class T, class... Tail, class U>
 void _helpOptional(void (*f)(T, Tail...), U& argv) {
   T data;
 
-  cout << "  -" << argv.head  << " (type " << _typeof(data) << ", default: " <<
-    argv.tail.head << ")\n";
-  _helpOptional((void (*)(Tail...))f, argv.tail.tail);
-}
-
-void _helpRequired(void (*)(void), Tuple<>&) {}
-
-template <class T, class... Tail, class U, class... Args>
-void _helpRequired(void (*f)(T, Tail...), Tuple<U, Required, Args...>& argv) {
-  T data;
-
-  cout << "  " << argv.head  << " (type " << _typeof(data) << ")\n";
-  _helpRequired((void (*)(Tail...))f, argv.tail.tail);
-}
-
-template <class T, class... Tail, class U>
-void _helpRequired(void (*f)(T, Tail...), U& argv) {
-  _helpRequired((void (*)(Tail...))f, argv.tail.tail);
+  cout << "  -" << argv.head.head  << " " << argv.head.tail.tail.head <<
+    " (type " << _typeof(data) << ", default: " << argv.head.tail.head <<
+    ")\n";
+  _helpOptional((void (*)(Tail...))f, argv.tail);
 }
 
 template <class T, class... Tail, class U>
@@ -191,7 +195,7 @@ void interface(T (*f)(Tail...), U defs) {
     token = _readToken();
 
     if (token[0] == '-') {
-      updateOptional(argv, defs, token.substr(1, string::npos));
+      updateOptional(argv, defs, token);
     }
     else {
       updateRequired(argv, defs, number, token);
@@ -226,9 +230,13 @@ int main(void) {
 
   //while (!feof(stdin)) {
   //  s = _readToken(); // Command.
-  //  interface(f, pack("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req));
+    interface(f, pack(
+      pack("-a", 2),
+      pack("name"),
+      pack("-c", true),
+      pack("-d", 3.14F),
+      pack("value")));
   //}
-  help(f, "f", pack("a", 2, "b", _req, "c", true, "d", 3.14F, "e", _req));
 
   return 0;
 }
