@@ -1,13 +1,11 @@
 #ifndef SIMPLE_REPL_HELP_TCC_
 #define SIMPLE_REPL_HELP_TCC_
 
-#define PARG Tuple<const char*, const char*>
-
 #include "io.tcc"
 #include "types.tcc"
 #include "tuple.tcc"
 
-extern RWIO IO;
+#define PARG Tuple<const char*, const char*>
 
 
 /*
@@ -60,12 +58,24 @@ void _helpOptional(void (*f)(T, Tail...), U& argv) {
 
 
 /*
+ * Help on return type.
+ */
+template <class... Tail>
+void returnType(void (*)(Tail...)) {}
+
+template <class T, class... Tail>
+void returnType(T (*)(Tail...)) {
+  T data;
+
+  IO.write("\nreturns:\n  ", _typeof(data), "\n");
+}
+
+
+/*
  * Help.
  */
 template <class T, class... Tail, class U>
 void help(T (*f)(Tail...), string name, string descr, U argv) { // U&
-  T data;
-
   IO.write(name, ": ", descr, "\n\n");
 
   IO.write("positional arguments:\n");
@@ -74,7 +84,7 @@ void help(T (*f)(Tail...), string name, string descr, U argv) { // U&
   IO.write("\noptional arguments:\n");
   _helpOptional((void (*)(Tail...))f, argv);
 
-  IO.write("\nreturns:\n  ", _typeof(data), "\n");
+  returnType(f);
 }
 
 #endif

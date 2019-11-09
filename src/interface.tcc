@@ -13,6 +13,50 @@
  * @li https://en.cppreference.com/w/cpp/language/parameter_pack
  */
 
+#include "args.tcc"
+#include "eval.tcc"
+#include "help.tcc"
+#include "io.tcc"
+
+#define param(args...) pack(args)
+#define params(args...) pack(args)
+
+RWIO IO;
+
+
+/*
+ * Parse command line parameters.
+ */
+template <class T, class... Tail, class U>
+void interface(T (*f)(Tail...), const char* name, string descr, U defs) {
+  Tuple<Tail...> argv;
+  string token = "";
+  int requiredParameters = setDefault(argv, defs),
+      number = 0;
+
+  while (!IO.eol()) {
+    token = IO.read();
+
+    if (token[0] == '-') {
+      updateOptional(argv, defs, token);
+    }
+    else {
+      updateRequired(argv, defs, number, token);
+      number++;
+    }
+  }
+
+  if (number == requiredParameters) {
+    call(f, argv);
+  }
+  else if (number > requiredParameters) {
+    IO.write("Too many parameters provided.\n");
+  }
+  else {
+    IO.write("Required parameter missing.");
+  }
+}
+/*
 #include <iostream>
 
 using namespace std;
@@ -20,6 +64,7 @@ using namespace std;
 #include "eval.tcc"
 #include "signature.tcc"
 #include "tuple.tcc"
+*/
 
 
 /**
@@ -30,19 +75,19 @@ using namespace std;
  * @param doc Function documentation.
  *
  * @private
- */
 template <class F, class D>
 void _writeDescription(F f, D name, D doc) {
   cout << name << " (" << signature(f) << ") ; " << doc << endl;
 }
+ */
 
 
 /**
  * Recursion terminator for @a _describe().
  *
  * @private
- */
 inline void _describe(void) {}
+ */
 
 /**
  * Describe a list of functions.
@@ -57,33 +102,33 @@ inline void _describe(void) {}
  * @param args Remaining parameters.
  *
  * @private
- */
 template <class F, class D, class... Args>
 void _describe(F f, D name, D doc, Args... args) {
   _writeDescription(f, name, doc);
   _describe(args...);
 }
+ */
 
 /**
  * Class member function.
  *
  * @private
- */
 template <class U, class V, class D, class... Args>
 void _describe(Tuple<U, V> t, D name, D doc, Args... args) {
   _writeDescription(t.tail.head, name, doc);
   _describe(args...);
 }
+ */
 
 
 /**
  * Recursion terminator for @a _select().
  *
  * @private
- */
 inline void _select(string command) {
   cout << "Error: unknown command: " << command << endl;
 }
+ */
 
 /**
  * Select and call a function indexed by @a number.
@@ -99,7 +144,6 @@ inline void _select(string command) {
  * @param args Remaining parameters.
  *
  * @private
- */
 template <class F, class D, class... Args>
 void _select(string command, F f, D name, D doc, Args... args) {
   if (name == command) {
@@ -108,6 +152,7 @@ void _select(string command, F f, D name, D doc, Args... args) {
   }
   _select(command, args...);
 }
+ */
 
 
 /**
@@ -122,7 +167,6 @@ void _select(string command, F f, D name, D doc, Args... args) {
  * @param args Parameter pairs (function pointer, name).
  *
  * @return @a true to continue @a false to quit.
- */
 template <class... Args>
 bool replInterface(Args... args) {
   string command;
@@ -149,5 +193,6 @@ bool replInterface(Args... args) {
 
   return true;
 }
+ */
 
 #endif

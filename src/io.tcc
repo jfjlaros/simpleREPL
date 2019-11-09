@@ -25,6 +25,12 @@ class RWIO {
          _ioREPL = true;
 };
 
+void _convert(bool*, string);
+void _convert(int*, string);
+void _convert(float*, string);
+void _convert(double*, string);
+void _convert(string*, string);
+
 
 /*
  *

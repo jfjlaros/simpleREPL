@@ -7,9 +7,7 @@
  * Read values from stdin, execute a function and write the result to stdout.
  */
 
-#include "read.tcc"
 #include "tuple.tcc"
-#include "write.tcc"
 
 
 /**
@@ -23,7 +21,6 @@
  * @param args Parameter pack for @a f.
  *
  * @private
- */
 template <class R, class... Tail, class... Args>
 void _call(void (*)(void), R (*f)(Tail...), Args&... args) {
   R data = f(args...);
@@ -50,6 +47,27 @@ template <class C, class P, class... Tail, class... Args>
 void _call(void (*)(void), Tuple<C*, void (P::*)(Tail...)> t, Args&... args) {
   (*t.head.*t.tail.head)(args...);
 }
+ */
+
+template <class T, class... Tail, class... Args>
+void _call(void (*)(void), T (*f)(Tail...), Tuple<>&, Args&... args) {
+  f(args...);
+}
+
+template <class F, class... Args>
+void _call(void (*)(void), F f, Tuple<>&, Args&... args) {
+  IO.write(f(args...), "\n");
+}
+
+template <class T, class... Tail, class F, class U, class... Args>
+void _call(void (*f_)(T, Tail...), F f, U& argv, Args&... args) {
+  _call((void (*)(Tail...))f_, f, argv.tail, args..., argv.head);
+}
+
+template <class T, class... Tail, class U>
+void call(T (*f)(Tail...), U& argv) {
+  _call((void (*)(Tail...))f, f, argv);
+}
 
 
 /**
@@ -67,7 +85,6 @@ void _call(void (*)(void), Tuple<C*, void (P::*)(Tail...)> t, Args&... args) {
  * @param args Parameter pack for @a f.
  *
  * @private
- */
 template <class T, class... Tail, class F, class... Args>
 void _call(void (*f_)(T, Tail...), F f, Args&... args) {
   T data;
@@ -84,6 +101,7 @@ void _call(void (*f_)(T&, Tail...), F f, Args&... args) {
   _read(&data);
   _call((void (*)(Tail...))f_, f, args..., data);
 }
+ */
 
 
 /**
@@ -95,21 +113,21 @@ void _call(void (*f_)(T&, Tail...), F f, Args&... args) {
  * expansion.
  *
  * @param f Function pointer.
- */
 template <class R, class... Args>
 void eval(R (*f)(Args...)) {
   _call((void (*)(Args...))f, f);
 }
+ */
 
 /**
  * Class member function.
  *
  * @param t @a Tuple consisting of a pointer to a class instance and a pointer
  *   to a class method.
- */
 template <class C, class P ,class R, class... Args>
 void eval(Tuple<C*, R (P::*)(Args...)> t) {
   _call((void (*)(Args...))t.tail.head, t);
 }
+ */
 
 #endif
