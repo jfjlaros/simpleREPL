@@ -1,14 +1,16 @@
-#include "io.h"
+#include "help.tcc"
+#include "io.tcc"
 
 #include "read.tcc"
 #include "tuple.tcc"
 #include "types.tcc"
 
+
 #define PARG Tuple<const char*, const char*>
 #define param(args...) pack(args)
 #define params(args...) pack(args)
 
-REPLIO IO;
+RWIO IO;
 
 
 /*
@@ -123,74 +125,6 @@ void call(T (*f)(Tail...), U& argv) {
 
 
 /*
- * Help on required parameters.
- */
-void _helpRequired(void (*)(void), Tuple<>&) {}
-
-template <class T, class... Tail, class... Args>
-void _helpRequired(void (*f)(T, Tail...), Tuple<PARG, Args...>& argv) {
-  T data;
-
-  IO.write(
-    "  ", argv.head.head, "\t\t", argv.head.tail.head, " (type ",
-    _typeof(data), ")\n");
-  _helpRequired((void (*)(Tail...))f, argv.tail);
-}
-
-template <class T, class... Tail, class U>
-void _helpRequired(void (*f)(T, Tail...), U& argv) {
-  _helpRequired((void (*)(Tail...))f, argv.tail);
-}
-
-
-/*
- * Help on optional parameters.
- */
-void _helpOptional(void (*)(void), Tuple<>&) {}
-
-template <class T, class... Tail, class... Args>
-void _helpOptional(void (*f)(T, Tail...), Tuple<PARG, Args...>& argv) {
-  _helpOptional((void (*)(Tail...))f, argv.tail);
-}
-
-template <class... Tail, class U>
-void _helpOptional(void (*f)(bool, Tail...), U& argv) {
-  IO.write(
-    "  ", argv.head.head, "\t\t", argv.head.tail.tail.head, " (type flag)\n");
-  _helpOptional((void (*)(Tail...))f, argv.tail);
-}
-
-template <class T, class... Tail, class U>
-void _helpOptional(void (*f)(T, Tail...), U& argv) {
-  T data;
-
-  IO.write(
-    "  ", argv.head.head, "\t\t", argv.head.tail.tail.head, " (type ",
-    _typeof(data), ", default: ", argv.head.tail.head, ")\n");
-  _helpOptional((void (*)(Tail...))f, argv.tail);
-}
-
-
-/*
- * Help.
- */
-template <class T, class... Tail, class U>
-void help(T (*f)(Tail...), string name, string descr, U argv) { // U&
-  T data;
-
-  IO.write(name, ": ", descr, "\n\n");
-
-  IO.write("positional arguments:\n");
-  _helpRequired((void (*)(Tail...))f, argv);
-
-  IO.write("\noptional arguments:\n");
-  _helpOptional((void (*)(Tail...))f, argv);
-
-  IO.write("\nreturns:\n  ", _typeof(data), "\n");
-}
-
-
-/*
  * Parse command line parameters.
  */
 template <class T, class... Tail, class U>
@@ -235,36 +169,23 @@ long f(int i, string s, bool b, float g, int j) {
 
 
 int main(int argc, char** argv) {
-  string s;
+  //IO = RWIO(argc, argv);
 
-  //IO = CLIIO(argc, argv);
+  help(f, "f", "funk the func", params(
+    param("-a", 2, "set the int"),
+    param("name", "name the name"),
+    param("-c", true, "flip the flop"),
+    param("-d", 3.14F, "pimp the pi"),
+    param("value", "set the value")));
 
-  //while (!feof(stdin)) {
-  //  s = _readToken(); // Command.
-    help(f, "f", "funk the func", params(
-      param("-a", 2, "set the int"),
-      param("name", "name the name"),
-      param("-c", true, "flip the flop"),
-      param("-d", 3.14F, "pimp the pi"),
-      param("value", "set the value")));
-    IO.write("\n");
-  /*
-      */
-      /*
-    interfaceREPL(f, "f", "funk the func", params(
-      param("-a", 2, "set the a"),
-      param("name", "name the name"),
-      param("-c", true, "flip the flop"),
-      param("-d", 3.14F, "pimp the pi"),
-      param("value", "set the value")));
-      */
-    interface(f, "f", "funk the func", params(
-      param("-a", 2, "set the a"),
-      param("name", "name the name"),
-      param("-c", true, "flip the flop"),
-      param("-d", 3.14F, "pimp the pi"),
-      param("value", "set the value")));
-  //}
+  IO.write("\n");
+
+  interface(f, "f", "funk the func", params(
+    param("-a", 2, "set the a"),
+    param("name", "name the name"),
+    param("-c", true, "flip the flop"),
+    param("-d", 3.14F, "pimp the pi"),
+    param("value", "set the value")));
 
   return 0;
 }

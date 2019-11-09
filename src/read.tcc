@@ -20,3 +20,5 @@ void _convert(double* data, string s) {
 void _convert(string* data, string s) {
   *data = s;
 }
+
+#endif

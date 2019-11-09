@@ -5,7 +5,7 @@ OBJS := io
 
 CC := g++
 INCLUDE_PATH := 
-CC_ARGS := -Wno-pmf-conversions -std=c++11
+CC_ARGS := -Wno-pmf-conversions -fpermissive -std=c++11
 
 
 OBJS := $(addsuffix .o, $(OBJS))
@@ -18,7 +18,7 @@ all: $(EXEC)
 $(EXEC): $(MAIN).cc $(OBJS)
 	$(CC) $(CC_ARGS) -o $@ $^
 
-%.o: %.cc %.h
+%.o: %.cc
 	$(CC) $(CC_ARGS) -c $^
 
 check: all
