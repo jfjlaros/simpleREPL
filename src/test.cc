@@ -1,14 +1,14 @@
-#include <iostream>
-#include <sstream>
-
-using namespace std;
+#include "io.h"
 
 #include "read.tcc"
 #include "tuple.tcc"
 #include "types.tcc"
-#include "write.tcc"
 
 #define PARG Tuple<const char*, const char*>
+#define param(args...) pack(args)
+#define params(args...) pack(args)
+
+REPLIO IO;
 
 
 /*
@@ -16,7 +16,7 @@ using namespace std;
  */
 template <class... Args>
 void show(Args...) {
-  cout << __PRETTY_FUNCTION__ << endl;
+  IO.write(__PRETTY_FUNCTION__, "\n");
 }
 
 
@@ -94,7 +94,7 @@ void updateOptional(Tuple<bool, Tail...>& argv, U& defs, string name) {
 template <class T, class... Tail, class U>
 void updateOptional(Tuple<T, Tail...>& argv, U& defs, string name) {
   if (defs.head.head == name) {
-    _convert(&argv.head, _readToken());
+    _convert(&argv.head, IO.read());
 
     return;
   }
@@ -131,8 +131,9 @@ template <class T, class... Tail, class... Args>
 void _helpRequired(void (*f)(T, Tail...), Tuple<PARG, Args...>& argv) {
   T data;
 
-  cout << "  " << argv.head.head  << "\t\t" << argv.head.tail.head <<
-    " (type " << _typeof(data) << ")\n";
+  IO.write(
+    "  ", argv.head.head, "\t\t", argv.head.tail.head, " (type ",
+    _typeof(data), ")\n");
   _helpRequired((void (*)(Tail...))f, argv.tail);
 }
 
@@ -154,8 +155,8 @@ void _helpOptional(void (*f)(T, Tail...), Tuple<PARG, Args...>& argv) {
 
 template <class... Tail, class U>
 void _helpOptional(void (*f)(bool, Tail...), U& argv) {
-  cout << "  " << argv.head.head  << "\t\t" << argv.head.tail.tail.head <<
-    " (type flag)\n";
+  IO.write(
+    "  ", argv.head.head, "\t\t", argv.head.tail.tail.head, " (type flag)\n");
   _helpOptional((void (*)(Tail...))f, argv.tail);
 }
 
@@ -163,9 +164,9 @@ template <class T, class... Tail, class U>
 void _helpOptional(void (*f)(T, Tail...), U& argv) {
   T data;
 
-  cout << "  " << argv.head.head  << "\t\t" << argv.head.tail.tail.head <<
-    " (type " << _typeof(data) << ", default: " << argv.head.tail.head <<
-    ")\n";
+  IO.write(
+    "  ", argv.head.head, "\t\t", argv.head.tail.tail.head, " (type ",
+    _typeof(data), ", default: ", argv.head.tail.head, ")\n");
   _helpOptional((void (*)(Tail...))f, argv.tail);
 }
 
@@ -174,18 +175,18 @@ void _helpOptional(void (*f)(T, Tail...), U& argv) {
  * Help.
  */
 template <class T, class... Tail, class U>
-void help(T (*f)(Tail...), string name, string description, U argv) { // U&
+void help(T (*f)(Tail...), string name, string descr, U argv) { // U&
   T data;
 
-  cout << name << ": " << description << "\n\n";
+  IO.write(name, ": ", descr, "\n\n");
 
-  cout << "positional arguments:\n";
+  IO.write("positional arguments:\n");
   _helpRequired((void (*)(Tail...))f, argv);
 
-  cout << "\noptional arguments:\n";
+  IO.write("\noptional arguments:\n");
   _helpOptional((void (*)(Tail...))f, argv);
 
-  cout << endl << "returns:\n  " << _typeof(data) << endl;
+  IO.write("\nreturns:\n  ", _typeof(data), "\n");
 }
 
 
@@ -193,14 +194,14 @@ void help(T (*f)(Tail...), string name, string description, U argv) { // U&
  * Parse command line parameters.
  */
 template <class T, class... Tail, class U>
-void interface(T (*f)(Tail...), const char* name, string description, U defs) {
+void interface(T (*f)(Tail...), const char* name, string descr, U defs) {
   Tuple<Tail...> argv;
-  string token;
+  string token = "";
   int requiredParameters = setDefault(argv, defs),
       number = 0;
 
-  while (!_endOfLine) {
-    token = _readToken();
+  while (!IO.eol()) {
+    token = IO.read();
 
     if (token[0] == '-') {
       updateOptional(argv, defs, token);
@@ -215,10 +216,10 @@ void interface(T (*f)(Tail...), const char* name, string description, U defs) {
     call(f, argv);
   }
   else if (number > requiredParameters) {
-    cout << "Too many parameters provided." << endl;
+    IO.write("Too many parameters provided.\n");
   }
   else {
-    cout << "Required parameter missing." << endl;
+    IO.write("Required parameter missing.");
   }
 }
 
@@ -227,36 +228,42 @@ void interface(T (*f)(Tail...), const char* name, string description, U defs) {
  * Test.
  */
 long f(int i, string s, bool b, float g, int j) {
-  cout << "f: " << i << " " << s << " " << b << " " << g << " " << j << endl;
+  IO.write("f: ", i, " ", s, " ", b, " ", g, " ", j, "\n");
 
   return 0;
 }
 
 
-int main(void) {
+int main(int argc, char** argv) {
   string s;
+
+  //IO = CLIIO(argc, argv);
 
   //while (!feof(stdin)) {
   //  s = _readToken(); // Command.
-  //  interface(f, pack(
-  //    pack("-a", 2),
-  //    pack("name"),
-  //    pack("-c", true),
-  //    pack("-d", 3.14F),
-  //    pack("value")));
-    help(f, "f", "funk the func", pack(
-      pack("-a", 2, "set the int"),
-      pack("name", "name the name"),
-      pack("-c", true, "flip the flop"),
-      pack("-d", 3.14F, "pimp the pi"),
-      pack("value", "set the value")));
-    cout << endl;
-    interface(f, "f", "funk the func", pack(
-      pack("-a", 2, "set the a"),
-      pack("name", "name the name"),
-      pack("-c", true, "flip the flop"),
-      pack("-d", 3.14F, "pimp the pi"),
-      pack("value", "set the value")));
+    help(f, "f", "funk the func", params(
+      param("-a", 2, "set the int"),
+      param("name", "name the name"),
+      param("-c", true, "flip the flop"),
+      param("-d", 3.14F, "pimp the pi"),
+      param("value", "set the value")));
+    IO.write("\n");
+  /*
+      */
+      /*
+    interfaceREPL(f, "f", "funk the func", params(
+      param("-a", 2, "set the a"),
+      param("name", "name the name"),
+      param("-c", true, "flip the flop"),
+      param("-d", 3.14F, "pimp the pi"),
+      param("value", "set the value")));
+      */
+    interface(f, "f", "funk the func", params(
+      param("-a", 2, "set the a"),
+      param("name", "name the name"),
+      param("-c", true, "flip the flop"),
+      param("-d", 3.14F, "pimp the pi"),
+      param("value", "set the value")));
   //}
 
   return 0;
