@@ -8,9 +8,7 @@ using namespace std;
 #include "types.tcc"
 #include "write.tcc"
 
-struct Required {};
-
-#define _req Required()
+#define PARG Tuple<const char*, const char*>
 
 
 /*
@@ -30,7 +28,7 @@ inline int _setDefault(Tuple<>&, Tuple<>&, int count) {
 }
 
 template <class T, class... Tail>
-int _setDefault(T& argv, Tuple<Tuple<const char*>, Tail...>& defs, int count) {
+int _setDefault(T& argv, Tuple<PARG, Tail...>& defs, int count) {
   _convert(&argv.head, "0"); // Not strictly needed, but nice for debugging.
 
   return _setDefault(argv.tail, defs.tail, count + 1);
@@ -56,8 +54,7 @@ inline void _updateRequired(Tuple<>&, Tuple<>&, int, int, string) {}
 
 template <class T, class... Tail>
 void _updateRequired(
-    T& argv, Tuple<Tuple<const char*>, Tail...>& defs,
-    int number, int count, string value) {
+    T& argv, Tuple<PARG, Tail...>& defs, int number, int count, string value) {
   if (number == count) {
     _convert(&argv.head, value);
 
@@ -126,16 +123,16 @@ void call(T (*f)(Tail...), U& argv) {
 
 
 /*
- * Help.
+ * Help on required parameters.
  */
 void _helpRequired(void (*)(void), Tuple<>&) {}
 
-template <class T, class... Tail, class U, class... Args>
-void _helpRequired(
-    void (*f)(T, Tail...), Tuple<Tuple<U, Required>, Args...>& argv) {
+template <class T, class... Tail, class... Args>
+void _helpRequired(void (*f)(T, Tail...), Tuple<PARG, Args...>& argv) {
   T data;
 
-  cout << "  " << argv.head.head  << " (type " << _typeof(data) << ")\n";
+  cout << "  " << argv.head.head  << "\t\t" << argv.head.tail.head <<
+    " (type " << _typeof(data) << ")\n";
   _helpRequired((void (*)(Tail...))f, argv.tail);
 }
 
@@ -144,17 +141,20 @@ void _helpRequired(void (*f)(T, Tail...), U& argv) {
   _helpRequired((void (*)(Tail...))f, argv.tail);
 }
 
+
+/*
+ * Help on optional parameters.
+ */
 void _helpOptional(void (*)(void), Tuple<>&) {}
 
-template <class T, class... Tail, class U, class... Args>
-void _helpOptional(
-    void (*f)(T, Tail...), Tuple<Tuple<U, Required>, Args...>& argv) {
+template <class T, class... Tail, class... Args>
+void _helpOptional(void (*f)(T, Tail...), Tuple<PARG, Args...>& argv) {
   _helpOptional((void (*)(Tail...))f, argv.tail);
 }
 
 template <class... Tail, class U>
 void _helpOptional(void (*f)(bool, Tail...), U& argv) {
-  cout << "  -" << argv.head.head  << " " << argv.head.tail.tail.head <<
+  cout << "  " << argv.head.head  << "\t\t" << argv.head.tail.tail.head <<
     " (type flag)\n";
   _helpOptional((void (*)(Tail...))f, argv.tail);
 }
@@ -163,21 +163,29 @@ template <class T, class... Tail, class U>
 void _helpOptional(void (*f)(T, Tail...), U& argv) {
   T data;
 
-  cout << "  -" << argv.head.head  << " " << argv.head.tail.tail.head <<
+  cout << "  " << argv.head.head  << "\t\t" << argv.head.tail.tail.head <<
     " (type " << _typeof(data) << ", default: " << argv.head.tail.head <<
     ")\n";
   _helpOptional((void (*)(Tail...))f, argv.tail);
 }
 
+
+/*
+ * Help.
+ */
 template <class T, class... Tail, class U>
-void help(T (*f)(Tail...), string name, U argv) { // U&
+void help(T (*f)(Tail...), string name, string description, U argv) { // U&
   T data;
 
-  cout << "Help on " << name << "\n\nRequired parameters:\n\n";
+  cout << name << ": " << description << "\n\n";
+
+  cout << "positional arguments:\n";
   _helpRequired((void (*)(Tail...))f, argv);
-  cout << "\nOptional parameters:\n\n";
+
+  cout << "\noptional arguments:\n";
   _helpOptional((void (*)(Tail...))f, argv);
-  cout << endl << "returns " << _typeof(data) << endl;
+
+  cout << endl << "returns:\n  " << _typeof(data) << endl;
 }
 
 
@@ -185,7 +193,7 @@ void help(T (*f)(Tail...), string name, U argv) { // U&
  * Parse command line parameters.
  */
 template <class T, class... Tail, class U>
-void interface(T (*f)(Tail...), U defs) {
+void interface(T (*f)(Tail...), const char* name, string description, U defs) {
   Tuple<Tail...> argv;
   string token;
   int requiredParameters = setDefault(argv, defs),
@@ -230,12 +238,25 @@ int main(void) {
 
   //while (!feof(stdin)) {
   //  s = _readToken(); // Command.
-    interface(f, pack(
-      pack("-a", 2),
-      pack("name"),
-      pack("-c", true),
-      pack("-d", 3.14F),
-      pack("value")));
+  //  interface(f, pack(
+  //    pack("-a", 2),
+  //    pack("name"),
+  //    pack("-c", true),
+  //    pack("-d", 3.14F),
+  //    pack("value")));
+    help(f, "f", "funk the func", pack(
+      pack("-a", 2, "set the int"),
+      pack("name", "name the name"),
+      pack("-c", true, "flip the flop"),
+      pack("-d", 3.14F, "pimp the pi"),
+      pack("value", "set the value")));
+    cout << endl;
+    interface(f, "f", "funk the func", pack(
+      pack("-a", 2, "set the a"),
+      pack("name", "name the name"),
+      pack("-c", true, "flip the flop"),
+      pack("-d", 3.14F, "pimp the pi"),
+      pack("value", "set the value")));
   //}
 
   return 0;
