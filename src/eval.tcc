@@ -21,37 +21,23 @@
  * @param args Parameter pack for @a f.
  *
  * @private
-template <class R, class... Tail, class... Args>
-void _call(void (*)(void), R (*f)(Tail...), Args&... args) {
-  R data = f(args...);
-
-  _write(&data);
-}
-
-/// @private Void function.
-template <class... Tail, class... Args>
-void _call(void (*)(void), void (*f)(Tail...), Args&... args) {
-  f(args...);
-}
-
-/// @private Class member function.
-template <class C, class P, class R, class... Tail, class... Args>
-void _call(void (*)(void), Tuple<C*, R (P::*)(Tail...)> t, Args&... args) {
-  R data =(*t.head.*t.tail.head)(args...);
-
-  _write(&data);
-}
-
-/// @private Void class member function.
+ */
 template <class C, class P, class... Tail, class... Args>
-void _call(void (*)(void), Tuple<C*, void (P::*)(Tail...)> t, Args&... args) {
+void _call(
+    void (*)(void), Tuple<C*, void (P::*)(Tail...)> t, Tuple<>&,
+    Args&... args) {
   (*t.head.*t.tail.head)(args...);
 }
- */
 
-template <class T, class... Tail, class... Args>
-void _call(void (*)(void), T (*f)(Tail...), Tuple<>&, Args&... args) {
+template <class... Tail, class... Args>
+void _call(void (*)(void), void (*f)(Tail...), Tuple<>&, Args&... args) {
   f(args...);
+}
+
+template <class C, class P, class T, class... Tail, class... Args>
+void _call(
+    void (*)(void), Tuple<C*, T (P::*)(Tail...)> t, Tuple<>&, Args&... args) {
+  IO.write((*t.head.*t.tail.head)(args...), "\n");
 }
 
 template <class F, class... Args>
@@ -64,71 +50,63 @@ void _call(void (*f_)(T, Tail...), F f, U& argv, Args&... args) {
   _call((void (*)(Tail...))f_, f, argv.tail, args..., argv.head);
 }
 
+template <class C, class T, class P, class... Tail, class U>
+void call(Tuple<C*, T (P::*)(Tail...)> t, U& argv) {
+  _call((void (*)(Tail...))t.head, t, argv);
+}
+
 template <class T, class... Tail, class U>
 void call(T (*f)(Tail...), U& argv) {
   _call((void (*)(Tail...))f, f, argv);
 }
 
 
-/**
- * Collect parameters of a function from stdin.
- *
- * We isolate the first parameter type @a T from function pointer @a *f_. This
- * type is used to instantiate the variable @a data, which is used to receive
- * @a sizeof(T) bytes from the stdin stream. This value is passed recursively
- * to @a _call() function, adding it to the @a args parameter pack. The first
- * parameter type @a T is removed from function pointer @a *f_ in the recursive
- * call.
- *
- * @param f_ Dummy function pointer.
- * @param f Function pointer.
- * @param args Parameter pack for @a f.
- *
- * @private
-template <class T, class... Tail, class F, class... Args>
-void _call(void (*f_)(T, Tail...), F f, Args&... args) {
-  T data;
-
-  _read(&data);
-  _call((void (*)(Tail...))f_, f, args..., data);
-}
-
-/// @private Parameter of type @a T&.
-template <class T, class... Tail, class F, class... Args>
-void _call(void (*f_)(T&, Tail...), F f, Args&... args) {
-  T data;
-
-  _read(&data);
-  _call((void (*)(Tail...))f_, f, args..., data);
-}
+/*
+ * Parse command line parameters.
  */
+template <class T, class U, class V>
+void _parse(T f, const char* name, string descr, U& defs, V& argv) {
+  string token = "";
+  int requiredParameters = setDefault(argv, defs),
+      number = 0;
 
+  while (!IO.eol()) {
+    token = IO.read();
 
-/**
- * Set up function parameter collection, execution and writing to stdout.
- *
- * We prepare a dummy function pointer, referred to as @a f_ in the template
- * functions above, which will be used to isolate parameter types. The return
- * type of this function pointer is removed to avoid unneeded template
- * expansion.
- *
- * @param f Function pointer.
-template <class R, class... Args>
-void eval(R (*f)(Args...)) {
-  _call((void (*)(Args...))f, f);
+    if (token[0] == '-') {
+      updateOptional(argv, defs, token);
+    }
+    else {
+      updateRequired(argv, defs, number, token);
+      number++;
+    }
+  }
+
+  if (number == requiredParameters) {
+    call(f, argv);
+  }
+  else if (number > requiredParameters) {
+    IO.write("Too many parameters provided.\n");
+  }
+  else {
+    IO.write("Required parameter missing.\n");
+  }
 }
- */
 
-/**
- * Class member function.
- *
- * @param t @a Tuple consisting of a pointer to a class instance and a pointer
- *   to a class method.
-template <class C, class P ,class R, class... Args>
-void eval(Tuple<C*, R (P::*)(Args...)> t) {
-  _call((void (*)(Args...))t.tail.head, t);
+template <class C, class P, class T, class... Tail, class U>
+void parse(
+    Tuple<C*, T (P::*)(Tail...)> t, const char* name, string descr, U defs) {
+  Tuple<Tail...> argv;
+
+  _parse(t, name, descr, defs, argv);
 }
- */
+
+template <class T, class... Tail, class U>
+void parse(T (*f)(Tail...), const char* name, string descr, U defs) {
+  Tuple<Tail...> argv;
+
+  _parse(f, name, descr, defs, argv);
+}
 
 
 /*
@@ -140,6 +118,7 @@ template <class T, class... Args>
 void select(string name, T t, Args... args) {
   if (t.tail.head == name) {
     parse(t.head, t.tail.head, t.tail.tail.head, t.tail.tail.tail);
+    return;
   }
 
   select(name, args...);

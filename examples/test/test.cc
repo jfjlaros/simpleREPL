@@ -20,14 +20,27 @@ long f(int i, string s, bool b, float g, int j) {
 }
 
 void g(int i, bool b) {
-  IO.write("g:", i, " ", b, "\n");
+  IO.write("g: ", i, " ", b, "\n");
 }
+
+class C {
+  public:
+    int h(void) {
+      return 1;
+    }
+    void i(int) {
+    }
+};
 
 
 int main(int argc, char** argv) {
-  //IO.enableCLI(argc, argv);
+  C c;
 
-  while (interface(
+  IO.enableCLI(argc, argv);
+
+  interface(
+    func(pack(&c, &C::i), "i", "class void test",
+      param("a", "a")),
     func(f, "f", "funk the func", 
       param("-a", 2, "set the int"),
       param("name", "name the name"),
@@ -36,7 +49,9 @@ int main(int argc, char** argv) {
       param("value", "set the value")),
     func(g, "g", "goop the gobb",
       param("value", "some value"),
-      param("-b", true, "bleep the blop"))));
+      param("-b", true, "bleep the blop")),
+    func(pack(&c, &C::h), "h", "class test")
+  );
 
   return 0;
 }

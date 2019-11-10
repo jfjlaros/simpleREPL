@@ -24,40 +24,6 @@
 RWIO IO;
 
 
-/*
- * Parse command line parameters.
- */
-template <class T, class... Tail, class U>
-void parse(T (*f)(Tail...), const char* name, string descr, U defs) {
-  Tuple<Tail...> argv;
-  string token = "";
-  int requiredParameters = setDefault(argv, defs),
-      number = 0;
-
-  while (!IO.eol()) {
-    token = IO.read();
-
-    if (token[0] == '-') {
-      updateOptional(argv, defs, token);
-    }
-    else {
-      updateRequired(argv, defs, number, token);
-      number++;
-    }
-  }
-
-  if (number == requiredParameters) {
-    call(f, argv);
-  }
-  else if (number > requiredParameters) {
-    IO.write("Too many parameters provided.\n");
-  }
-  else {
-    IO.write("Required parameter missing.");
-  }
-}
-
-
 /**
  * REPL interface.
  *
@@ -75,14 +41,20 @@ template <class... Args>
 bool interface(Args... args) {
   string command;
 
-  IO.write("> ");
+  if (IO.interactive()) {
+    IO.write("> ");
+  }
   command = IO.read();
 
   if (command == "exit") {
     return false;
   }
   if (command == "list") {
+    IO.write("Available commands:\n\n");
     describe(args...);
+    IO.write("list\t\tShow available commands.\n");
+    IO.write("help\t\tHelp on a specific command.\n");
+    IO.write("exit\t\tExit.\n\n");
     return true;
   }
   if (command == "help") {

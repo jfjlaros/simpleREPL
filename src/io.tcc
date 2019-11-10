@@ -13,7 +13,8 @@ using namespace std;
 class RWIO {
   public:
     RWIO(void) {}
-    bool eol(void);
+    bool eol(void),
+         interactive(void);
     string read(void);
     void enableCLI(int, char**),
          write(void) {}
@@ -24,7 +25,7 @@ class RWIO {
         _number = 0;
     char** _argv;
     bool _endOfLine = false,
-         _ioREPL = true;
+         _interactive = true;
 };
 
 void _convert(bool*, string);

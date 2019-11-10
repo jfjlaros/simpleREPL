@@ -24,12 +24,12 @@ int _ping(int data) {
  * @param args Parameter pairs (function pointer, documentation).
  *
  * @return @a true to continue @a false to quit.
- */
 template <class... Args>
 bool interface(Args... args) {
   return replInterface(
     //_ping, "ping", "Ping.",
     args...);
 }
+ */
 
 #endif

@@ -91,6 +91,19 @@ void _help(T (*f)(Tail...), string name, string descr, U& argv) {
  */
 void help(string) {}
 
+template <class C, class R, class P, class... Z, class... Tail, class... Args>
+void help(
+    string name, Tuple<Tuple<C*, R (P::*)(Z...)>, Tail...> t, Args... args) {
+  if (t.tail.head == name) {
+    _help(
+      (R (*)(Z...))t.head.tail.head, t.tail.head, t.tail.tail.head,
+      t.tail.tail.tail);
+    return;
+  }
+
+  help(name, args...);
+}
+
 template <class T, class... Args>
 void help(string name, T t, Args... args) {
   if (t.tail.head == name) {

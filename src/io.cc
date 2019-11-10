@@ -9,7 +9,7 @@ string RWIO::read(void) {
   bool quoted = false;
   char c = ' ';
 
-  if (_ioREPL) {
+  if (_interactive) {
     _endOfLine = false;
 
     while (c == ' ' || c == '\t') {
@@ -47,7 +47,7 @@ string RWIO::read(void) {
  *
  */
 bool RWIO::eol(void) {
-  if (_ioREPL) {
+  if (_interactive) {
     return _endOfLine;
   }
 
@@ -57,8 +57,15 @@ bool RWIO::eol(void) {
 /*
  *
  */
+bool RWIO::interactive(void) {
+  return _interactive;
+}
+
+/*
+ *
+ */
 void RWIO::enableCLI(int argc, char** argv) {
-  _ioREPL = false;
+  _interactive = false;
   _argc = argc;
   _argv = argv;
 }
