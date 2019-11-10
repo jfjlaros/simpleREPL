@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#define PARG Tuple<const char*, const char*>
+
 using namespace std;
 
 /*
@@ -11,10 +13,10 @@ using namespace std;
 class RWIO {
   public:
     RWIO(void) {}
-    RWIO(int, char**);
     bool eol(void);
     string read(void);
-    void write(void) {}
+    void enableCLI(int, char**),
+         write(void) {}
     template <class T, class... Args>
       void write(T, Args...);
   private:

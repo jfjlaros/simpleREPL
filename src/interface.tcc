@@ -19,7 +19,7 @@
 #include "io.tcc"
 
 #define param(args...) pack(args)
-#define params(args...) pack(args)
+#define func(args...) pack(args)
 
 RWIO IO;
 
@@ -28,7 +28,7 @@ RWIO IO;
  * Parse command line parameters.
  */
 template <class T, class... Tail, class U>
-void interface(T (*f)(Tail...), const char* name, string descr, U defs) {
+void parse(T (*f)(Tail...), const char* name, string descr, U defs) {
   Tuple<Tail...> argv;
   string token = "";
   int requiredParameters = setDefault(argv, defs),
@@ -56,103 +56,6 @@ void interface(T (*f)(Tail...), const char* name, string descr, U defs) {
     IO.write("Required parameter missing.");
   }
 }
-/*
-#include <iostream>
-
-using namespace std;
-
-#include "eval.tcc"
-#include "signature.tcc"
-#include "tuple.tcc"
-*/
-
-
-/**
- * Write the signature and name of a function to stdout.
- *
- * @param f Function pointer.
- * @param name Function name.
- * @param doc Function documentation.
- *
- * @private
-template <class F, class D>
-void _writeDescription(F f, D name, D doc) {
-  cout << name << " (" << signature(f) << ") ; " << doc << endl;
-}
- */
-
-
-/**
- * Recursion terminator for @a _describe().
- *
- * @private
-inline void _describe(void) {}
- */
-
-/**
- * Describe a list of functions.
- *
- * We isolate the first two parameters @a f and @a name, pass these to
- * @a _writeDescription() and make a recursive call to process the remaining
- * parameters.
- *
- * @param f Function pointer.
- * @param name Function name.
- * @param doc Function documentation.
- * @param args Remaining parameters.
- *
- * @private
-template <class F, class D, class... Args>
-void _describe(F f, D name, D doc, Args... args) {
-  _writeDescription(f, name, doc);
-  _describe(args...);
-}
- */
-
-/**
- * Class member function.
- *
- * @private
-template <class U, class V, class D, class... Args>
-void _describe(Tuple<U, V> t, D name, D doc, Args... args) {
-  _writeDescription(t.tail.head, name, doc);
-  _describe(args...);
-}
- */
-
-
-/**
- * Recursion terminator for @a _select().
- *
- * @private
-inline void _select(string command) {
-  cout << "Error: unknown command: " << command << endl;
-}
- */
-
-/**
- * Select and call a function indexed by @a number.
- *
- * We isolate the parameter @a f and its name, discarding the latter. If we
- * have arrived at the selected function (i.e., if @a depth equals @a number),
- * we call function @a f. Otherwise, we try again recursively.
- *
- * @param command Command name.
- * @param f Function pointer.
- * @param name Function name.
- * @param doc Function documentation.
- * @param args Remaining parameters.
- *
- * @private
-template <class F, class D, class... Args>
-void _select(string command, F f, D name, D doc, Args... args) {
-  if (name == command) {
-    eval(f);
-    return;
-  }
-  _select(command, args...);
-}
- */
 
 
 /**
@@ -167,32 +70,29 @@ void _select(string command, F f, D name, D doc, Args... args) {
  * @param args Parameter pairs (function pointer, name).
  *
  * @return @a true to continue @a false to quit.
+ */
 template <class... Args>
-bool replInterface(Args... args) {
+bool interface(Args... args) {
   string command;
 
-  cout << "> ";
-  cin >> command;
+  IO.write("> ");
+  command = IO.read();
 
-  if (command == "exit" || !cin) {
+  if (command == "exit") {
     return false;
   }
+  if (command == "list") {
+    describe(args...);
+    return true;
+  }
   if (command == "help") {
-    cout << "name (return type: parameter types) ; documentation\n\n";
-    _describe(args...);
-    cout << "help (string:) ; This help message.\nexit (void:) ; Exit.\n";
+    help(IO.read(), args...);
     return true;
   }
 
-  _select(command, args...);
-
-  getline(cin, command);
-  if (command.length()) {
-    cout << "Warning: ignored \"" << command << "\"" << endl;
-  }
+  select(command, args...);
 
   return true;
 }
- */
 
 #endif

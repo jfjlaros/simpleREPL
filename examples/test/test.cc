@@ -19,25 +19,24 @@ long f(int i, string s, bool b, float g, int j) {
   return 0;
 }
 
+void g(int i, bool b) {
+  IO.write("g:", i, " ", b, "\n");
+}
+
 
 int main(int argc, char** argv) {
-  //IO = RWIO(argc, argv);
+  //IO.enableCLI(argc, argv);
 
-  help(f, "f", "funk the func", params(
-    param("-a", 2, "set the int"),
-    param("name", "name the name"),
-    param("-c", true, "flip the flop"),
-    param("-d", 3.14F, "pimp the pi"),
-    param("value", "set the value")));
-
-  IO.write("\n");
-
-  interface(f, "f", "funk the func", params(
-    param("-a", 2, "set the a"),
-    param("name", "name the name"),
-    param("-c", true, "flip the flop"),
-    param("-d", 3.14F, "pimp the pi"),
-    param("value", "set the value")));
+  while (interface(
+    func(f, "f", "funk the func", 
+      param("-a", 2, "set the int"),
+      param("name", "name the name"),
+      param("-c", true, "flip the flop"),
+      param("-d", 3.14F, "pimp the pi"),
+      param("value", "set the value")),
+    func(g, "g", "goop the gobb",
+      param("value", "some value"),
+      param("-b", true, "bleep the blop"))));
 
   return 0;
 }

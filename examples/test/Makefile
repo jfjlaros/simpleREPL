@@ -19,7 +19,7 @@ $(EXEC): $(MAIN).cc $(OBJS)
 	$(CC) $(CC_ARGS) -o $@ $^
 
 %.o: %.cc
-	$(CC) $(CC_ARGS) -c $^
+	$(CC) $(CC_ARGS) -o $@ -c $^
 
 check: all
 	valgrind ./$(EXEC)

@@ -130,4 +130,19 @@ void eval(Tuple<C*, R (P::*)(Args...)> t) {
 }
  */
 
+
+/*
+ * Select a function to be executed.
+ */
+void select(string) {}
+
+template <class T, class... Args>
+void select(string name, T t, Args... args) {
+  if (t.tail.head == name) {
+    parse(t.head, t.tail.head, t.tail.tail.head, t.tail.tail.tail);
+  }
+
+  select(name, args...);
+}
+
 #endif

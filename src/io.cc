@@ -1,13 +1,5 @@
 #include "io.tcc"
 
-/*
- *
- */
-RWIO::RWIO(int argc, char** argv) {
-  _ioREPL = false;
-  _argc = argc;
-  _argv = argv;
-}
 
 /*
  *
@@ -51,7 +43,6 @@ string RWIO::read(void) {
   return _argv[_number];
 }
 
-
 /*
  *
  */
@@ -63,7 +54,19 @@ bool RWIO::eol(void) {
   return _number >= _argc - 1;
 }
 
+/*
+ *
+ */
+void RWIO::enableCLI(int argc, char** argv) {
+  _ioREPL = false;
+  _argc = argc;
+  _argv = argv;
+}
 
+
+/*
+ *
+ */
 void _convert(bool* data, string s) {
   *data = (bool)stoi(s);
 }

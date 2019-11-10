@@ -4,8 +4,6 @@
 #include "io.tcc"
 #include "tuple.tcc"
 
-#define PARG Tuple<const char*, const char*>
-
 extern RWIO IO;
 
 

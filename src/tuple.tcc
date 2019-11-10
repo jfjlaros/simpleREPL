@@ -7,7 +7,6 @@
  * @a Tuple and @a Object definitions and manipulation functions.
  */
 
-
 /**
  * Empty tuple.
  *

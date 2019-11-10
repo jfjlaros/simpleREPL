@@ -5,8 +5,6 @@
 #include "types.tcc"
 #include "tuple.tcc"
 
-#define PARG Tuple<const char*, const char*>
-
 
 /*
  * Help on required parameters.
@@ -75,7 +73,7 @@ void returnType(T (*)(Tail...)) {
  * Help.
  */
 template <class T, class... Tail, class U>
-void help(T (*f)(Tail...), string name, string descr, U argv) { // U&
+void _help(T (*f)(Tail...), string name, string descr, U& argv) {
   IO.write(name, ": ", descr, "\n\n");
 
   IO.write("positional arguments:\n");
@@ -85,6 +83,34 @@ void help(T (*f)(Tail...), string name, string descr, U argv) { // U&
   _helpOptional((void (*)(Tail...))f, argv);
 
   returnType(f);
+}
+
+
+/*
+ * Help selector.
+ */
+void help(string) {}
+
+template <class T, class... Args>
+void help(string name, T t, Args... args) {
+  if (t.tail.head == name) {
+    _help(t.head, t.tail.head, t.tail.tail.head, t.tail.tail.tail);
+    return;
+  }
+
+  help(name, args...);
+}
+
+
+/*
+ * Short description of all available functions.
+ */
+void describe(void) {}
+
+template <class T, class... Args>
+void describe(T t, Args... args) {
+  IO.write(t.tail.head, "\t\t", t.tail.tail.head, "\n");
+  describe(args...);
 }
 
 #endif
