@@ -23,6 +23,8 @@ void g(int i, bool b) {
   IO.write("g: ", i, " ", b, "\n");
 }
 
+void j(void) {}
+
 class C {
   public:
     int h(void) {
@@ -59,7 +61,8 @@ int main(int argc, char** argv) {
     func(g, "g", "goop the gobb",
       param("value", "some value"),
       param("-b", true, "bleep the blop")),
-    func(pack(&c, &C::h), "h", "class test")));
+    func(pack(&c, &C::h), "h", "class test"),
+    func(j, "j", "void")));
 
   return 0;
 }

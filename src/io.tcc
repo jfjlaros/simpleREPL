@@ -68,4 +68,16 @@ void RWIO::write(T data, Args... args) {
   write(args...);
 }
 
+
+template <class T>
+bool convert(T* data, string s) {
+  try {
+    _convert(data, s);
+  }
+  catch (std::invalid_argument) {
+    return false;
+  }
+  return true;
+}
+
 #endif

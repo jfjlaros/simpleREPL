@@ -35,7 +35,7 @@ inline void setDefault(Tuple<>&, Tuple<>&) {}
 
 template <class A, PARG_T>
 void setDefault(A& argv, PARG& defs) {
-  _convert(&argv.head, "0"); // Not strictly needed, but nice for debugging.
+  convert(&argv.head, "0"); // Not strictly needed, but nice for debugging.
   setDefault(argv.tail, defs.tail);
 }
 
@@ -57,7 +57,10 @@ inline bool _updateRequired(Tuple<>&, Tuple<>&, int, int, string& s) {
 template <class A, PARG_T>
 bool _updateRequired(A& argv, PARG& defs, int num, int count, string& value) {
   if (num == count) {
-    _convert(&argv.head, value);
+    if (!convert(&argv.head, value)) {
+      IO.write("Wrong type for parameter ", num + 1, "\n");
+      return false;
+    }
     return true;
   }
 
@@ -96,7 +99,10 @@ bool updateOptional(Tuple<bool, Tail...>& argv, D& defs, string name) {
 template <class H, class... Tail, class D>
 bool updateOptional(Tuple<H, Tail...>& argv, D& defs, string name) {
   if (defs.head.head == name) {
-    _convert(&argv.head, IO.read());
+    if (!convert(&argv.head, IO.read())) {
+      IO.err("Wrong type for parameter ", name, "\n");;
+      return false;
+    }
     return true;
   }
 

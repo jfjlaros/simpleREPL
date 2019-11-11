@@ -31,6 +31,10 @@ string RWIO::read(void) {
       }
 
       c = getc(stdin);
+
+      if (feof(stdin)) {
+        return "exit";
+      }
     }
 
     _endOfLine = true;

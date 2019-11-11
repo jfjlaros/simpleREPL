@@ -5,6 +5,10 @@
 #include "types.tcc"
 #include "tuple.tcc"
 
+#define LISTHELP "Show available commands.\n"
+#define HELPHELP "Help on a specific command.\n"
+#define EXITHELP "Exit.\n"
+
 
 /*
  * Help on required parameters.
@@ -104,7 +108,21 @@ void help(TMEMB t, string name, string descr, A& argv) {
  * Help selector.
  */
 inline void selectHelp(string s) {
-  IO.err("Unknown command: ", s, "\n");
+  if (s == "list") {
+    IO.write(s, ": ", LISTHELP);
+  }
+  else if (s == "help") {
+    IO.write(
+      s, ": ", HELPHELP, "\npositional arguments:\n",
+      "  name\t\tcommand name (type string)\n");
+  }
+  else if (s == "exit") {
+    IO.write(s, ": ", EXITHELP);
+  }
+  else {
+    IO.write("Unknown command: ", s, "\n");
+  }
+  IO.flush();
 }
 
 template <class H, class... Tail>
@@ -122,12 +140,14 @@ void selectHelp(string name, H t, Tail... args) {
  * Short description of all available functions.
  */
 inline void describe(void) {
+  IO.write(
+    "  list\t\t", LISTHELP, "  help\t\t", HELPHELP, "  exit\t\t", EXITHELP);
   IO.flush();
 }
 
 template <class H, class... Tail>
 void describe(H t, Tail... args) {
-  IO.write(t.tail.head, "\t\t", t.tail.tail.head, "\n");
+  IO.write("  ", t.tail.head, "\t\t", t.tail.tail.head, "\n");
   describe(args...);
 }
 

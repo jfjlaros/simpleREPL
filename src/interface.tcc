@@ -63,11 +63,8 @@ bool interface(Args... args) {
     return false;
   }
   if (command == "list") {
-    IO.write("Available commands:\n\n");
+    IO.write("Available commands:\n");
     describe(args...);
-    IO.write("list\t\tShow available commands.\n");
-    IO.write("help\t\tHelp on a specific command.\n");
-    IO.write("exit\t\tExit.\n\n");
     return true;
   }
   if (command == "help") {
