@@ -56,6 +56,7 @@ bool interface(Args... args) {
   if (IO.interactive()) {
     IO.write("> ");
   }
+
   command = IO.read();
 
   if (command == "exit") {
@@ -70,7 +71,12 @@ bool interface(Args... args) {
     return true;
   }
   if (command == "help") {
-    selectHelp(IO.read(), args...);
+    if (!IO.eol()) {
+      selectHelp(IO.read(), args...);
+    }
+    else {
+      IO.err("Please provide a command.\n");
+    }
     return true;
   }
 

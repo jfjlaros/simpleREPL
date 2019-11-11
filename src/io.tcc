@@ -18,7 +18,10 @@ class RWIO {
          interactive(void);
     string read(void);
     void enableCLI(int, char**),
+         flush(),
          write(void) {}
+    template <class... Args>
+      void err(Args...);
     template <class T, class... Args>
       void write(T, Args...);
   private:
@@ -46,6 +49,15 @@ void _convert(bool*, string),
      _convert(long double*, string),
      _convert(string*, string);
 
+
+/*
+ *
+ */
+template <class... Args>
+void RWIO::err(Args... args) {
+  write(args...);
+  flush();
+}
 
 /*
  *

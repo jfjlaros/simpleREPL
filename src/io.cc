@@ -70,6 +70,12 @@ void RWIO::enableCLI(int argc, char** argv) {
   _argv = argv;
 }
 
+void RWIO::flush(void) {
+  while (!_endOfLine) {
+    read();
+  }
+}
+
 
 /*
  *

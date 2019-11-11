@@ -74,27 +74,26 @@ bool _parse(F f, U& defs, V& argv) {
     token = IO.read();
 
     if (token[0] == '-') {
-      updateOptional(argv, defs, token);
+      if (!updateOptional(argv, defs, token)) {
+        return false;
+      }
     }
     else {
-      updateRequired(argv, defs, number, token);
+      if (!updateRequired(argv, defs, number, token)) {
+        return false;
+      }
       number++;
     }
   }
 
   countArgs(defs, req, opt);
 
-  if (number == req) {
-    call(f, argv);
-  }
-  else if (number > req) {
-    IO.write("Too many parameters provided.\n");
-    return false;
-  }
-  else {
+  if (number < req) {
     IO.write("Required parameter missing.\n");
     return false;
   }
+
+  call(f, argv);
 
   return true;
 }
@@ -117,7 +116,9 @@ bool parse(R (*f)(Tail...), U defs) {
 /*
  * Select a function to be executed.
  */
-bool select(string) {
+inline bool select(string s) {
+  IO.write("Unknown command: ", s, "\n");
+  IO.flush();
   return false;
 }
 

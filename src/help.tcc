@@ -9,7 +9,7 @@
 /*
  * Help on required parameters.
  */
-void _helpRequired(void (*)(void), Tuple<>&) {}
+inline void _helpRequired(void (*)(void), Tuple<>&) {}
 
 template <class H, class... Tail, PARG_T>
 void _helpRequired(void (*f)(H, Tail...), PARG& argv) {
@@ -30,7 +30,7 @@ void _helpRequired(void (*f)(H, Tail...), U& argv) {
 /*
  * Help on optional parameters.
  */
-void _helpOptional(void (*)(void), Tuple<>&) {}
+inline void _helpOptional(void (*)(void), Tuple<>&) {}
 
 template <class H, class... Tail, PARG_T>
 void _helpOptional(void (*f)(H, Tail...), PARG& argv) {
@@ -103,7 +103,9 @@ void help(TMEMB t, string name, string descr, A& argv) {
 /*
  * Help selector.
  */
-void selectHelp(string) {}
+inline void selectHelp(string s) {
+  IO.err("Unknown command: ", s, "\n");
+}
 
 template <class H, class... Tail>
 void selectHelp(string name, H t, Tail... args) {
@@ -119,7 +121,9 @@ void selectHelp(string name, H t, Tail... args) {
 /*
  * Short description of all available functions.
  */
-void describe(void) {}
+inline void describe(void) {
+  IO.flush();
+}
 
 template <class H, class... Tail>
 void describe(H t, Tail... args) {

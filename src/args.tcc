@@ -49,52 +49,58 @@ void setDefault(A& argv, D& defs) {
 /*
  * Update a required parameter value.
  */
-inline void _updateRequired(Tuple<>&, Tuple<>&, int, int, string&) {}
+inline bool _updateRequired(Tuple<>&, Tuple<>&, int, int, string& s) {
+  IO.err("Excess parameter: ", s, "\n");
+  return false;
+}
 
 template <class A, PARG_T>
-void _updateRequired(A& argv, PARG& defs, int num, int count, string& value) {
+bool _updateRequired(A& argv, PARG& defs, int num, int count, string& value) {
   if (num == count) {
     _convert(&argv.head, value);
-    return;
+    return true;
   }
 
-  _updateRequired(argv.tail, defs.tail, num, count + 1, value);
+  return _updateRequired(argv.tail, defs.tail, num, count + 1, value);
 }
 
 template <class A, class D>
-void _updateRequired(A& argv, D& defs, int num, int count, string& value) {
-  _updateRequired(argv.tail, defs.tail, num, count, value);
+bool _updateRequired(A& argv, D& defs, int num, int count, string& value) {
+  return _updateRequired(argv.tail, defs.tail, num, count, value);
 }
 
 template <class A, class D>
-void updateRequired(A& argv, D& defs, int num, string& value) {
-  _updateRequired(argv, defs, num, 0, value);
+bool updateRequired(A& argv, D& defs, int num, string& value) {
+  return _updateRequired(argv, defs, num, 0, value);
 }
 
 
 /*
  * Update an optional parameter value.
  */
-inline void updateOptional(Tuple<>&, Tuple<>&, string) {}
+inline bool updateOptional(Tuple<>&, Tuple<>&, string s) {
+  IO.err("Unknown parameter: ", s, "\n");
+  return false;
+}
 
 template <class... Tail, class D>
-void updateOptional(Tuple<bool, Tail...>& argv, D& defs, string name) {
+bool updateOptional(Tuple<bool, Tail...>& argv, D& defs, string name) {
   if (defs.head.head == name) {
     argv.head = !argv.head;
-    return;
+    return true;
   }
 
-  updateOptional(argv.tail, defs.tail, name);
+  return updateOptional(argv.tail, defs.tail, name);
 }
 
 template <class H, class... Tail, class D>
-void updateOptional(Tuple<H, Tail...>& argv, D& defs, string name) {
+bool updateOptional(Tuple<H, Tail...>& argv, D& defs, string name) {
   if (defs.head.head == name) {
     _convert(&argv.head, IO.read());
-    return;
+    return true;
   }
 
-  updateOptional(argv.tail, defs.tail, name);
+  return updateOptional(argv.tail, defs.tail, name);
 }
 
 #endif
