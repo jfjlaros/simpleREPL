@@ -65,6 +65,10 @@ inline string _typeof(double) {
   return "double";
 }
 
+inline string _typeof(long double) {
+  return "long double";
+}
+
 inline string _typeof(string) {
   return "string";
 }

@@ -7,6 +7,9 @@
  * @a Tuple and @a Object definitions and manipulation functions.
  */
 
+#define VMEMB Tuple<C*, void (P::*)(Tail...)>
+#define TMEMB Tuple<C*, R (P::*)(Tail...)>
+
 /**
  * Empty tuple.
  *

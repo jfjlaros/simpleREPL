@@ -23,9 +23,7 @@
  * @private
  */
 template <class C, class P, class... Tail, class... Args>
-void _call(
-    void (*)(void), Tuple<C*, void (P::*)(Tail...)> t, Tuple<>&,
-    Args&... args) {
+void _call(void (*)(void), VMEMB t, Tuple<>&, Args&... args) {
   (*t.head.*t.tail.head)(args...);
 }
 
@@ -34,9 +32,8 @@ void _call(void (*)(void), void (*f)(Tail...), Tuple<>&, Args&... args) {
   f(args...);
 }
 
-template <class C, class P, class T, class... Tail, class... Args>
-void _call(
-    void (*)(void), Tuple<C*, T (P::*)(Tail...)> t, Tuple<>&, Args&... args) {
+template <class C, class R, class P, class... Tail, class... Args>
+void _call(void (*)(void), TMEMB t, Tuple<>&, Args&... args) {
   IO.write((*t.head.*t.tail.head)(args...), "\n");
 }
 
@@ -45,18 +42,18 @@ void _call(void (*)(void), F f, Tuple<>&, Args&... args) {
   IO.write(f(args...), "\n");
 }
 
-template <class T, class... Tail, class F, class U, class... Args>
-void _call(void (*f_)(T, Tail...), F f, U& argv, Args&... args) {
+template <class H, class... Tail, class F, class U, class... Args>
+void _call(void (*f_)(H, Tail...), F f, U& argv, Args&... args) {
   _call((void (*)(Tail...))f_, f, argv.tail, args..., argv.head);
 }
 
-template <class C, class T, class P, class... Tail, class U>
-void call(Tuple<C*, T (P::*)(Tail...)> t, U& argv) {
+template <class C, class R, class P, class... Tail, class U>
+void call(TMEMB t, U& argv) {
   _call((void (*)(Tail...))t.head, t, argv);
 }
 
-template <class T, class... Tail, class U>
-void call(T (*f)(Tail...), U& argv) {
+template <class R, class... Tail, class U>
+void call(R (*f)(Tail...), U& argv) {
   _call((void (*)(Tail...))f, f, argv);
 }
 
@@ -64,8 +61,8 @@ void call(T (*f)(Tail...), U& argv) {
 /*
  * Parse command line parameters.
  */
-template <class T, class U, class V>
-void _parse(T f, const char* name, string descr, U& defs, V& argv) {
+template <class F, class U, class V>
+bool _parse(F f, U& defs, V& argv) {
   string token = "";
   int req,
       opt,
@@ -92,41 +89,45 @@ void _parse(T f, const char* name, string descr, U& defs, V& argv) {
   }
   else if (number > req) {
     IO.write("Too many parameters provided.\n");
+    return false;
   }
   else {
     IO.write("Required parameter missing.\n");
+    return false;
   }
+
+  return true;
 }
 
-template <class C, class P, class T, class... Tail, class U>
-void parse(
-    Tuple<C*, T (P::*)(Tail...)> t, const char* name, string descr, U defs) {
+template <class C, class P, class R, class... Tail, class U>
+bool parse(TMEMB t, U defs) {
   Tuple<Tail...> argv;
 
-  _parse(t, name, descr, defs, argv);
+  return _parse(t, defs, argv);
 }
 
-template <class T, class... Tail, class U>
-void parse(T (*f)(Tail...), const char* name, string descr, U defs) {
+template <class R, class... Tail, class U>
+bool parse(R (*f)(Tail...), U defs) {
   Tuple<Tail...> argv;
 
-  _parse(f, name, descr, defs, argv);
+  return _parse(f, defs, argv);
 }
 
 
 /*
  * Select a function to be executed.
  */
-void select(string) {}
+bool select(string) {
+  return false;
+}
 
 template <class T, class... Args>
-void select(string name, T t, Args... args) {
+bool select(string name, T t, Args... args) {
   if (t.tail.head == name) {
-    parse(t.head, t.tail.head, t.tail.tail.head, t.tail.tail.tail);
-    return;
+    return parse(t.head, t.tail.tail.tail);
   }
 
-  select(name, args...);
+  return select(name, args...);
 }
 
 #endif

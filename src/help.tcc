@@ -11,9 +11,9 @@
  */
 void _helpRequired(void (*)(void), Tuple<>&) {}
 
-template <class T, class... Tail, class... Args>
-void _helpRequired(void (*f)(T, Tail...), Tuple<PARG, Args...>& argv) {
-  T data;
+template <class H, class... Tail, class... Args>
+void _helpRequired(void (*f)(H, Tail...), PARG& argv) {
+  H data;
 
   IO.write(
     "  ", argv.head.head, "\t\t", argv.head.tail.head, " (type ",
@@ -21,8 +21,8 @@ void _helpRequired(void (*f)(T, Tail...), Tuple<PARG, Args...>& argv) {
   _helpRequired((void (*)(Tail...))f, argv.tail);
 }
 
-template <class T, class... Tail, class U>
-void _helpRequired(void (*f)(T, Tail...), U& argv) {
+template <class H, class... Tail, class U>
+void _helpRequired(void (*f)(H, Tail...), U& argv) {
   _helpRequired((void (*)(Tail...))f, argv.tail);
 }
 
@@ -32,21 +32,21 @@ void _helpRequired(void (*f)(T, Tail...), U& argv) {
  */
 void _helpOptional(void (*)(void), Tuple<>&) {}
 
-template <class T, class... Tail, class... Args>
-void _helpOptional(void (*f)(T, Tail...), Tuple<PARG, Args...>& argv) {
+template <class H, class... Tail, class... Args>
+void _helpOptional(void (*f)(H, Tail...), PARG& argv) {
   _helpOptional((void (*)(Tail...))f, argv.tail);
 }
 
-template <class... Tail, class U>
-void _helpOptional(void (*f)(bool, Tail...), U& argv) {
+template <class... Tail, class A>
+void _helpOptional(void (*f)(bool, Tail...), A& argv) {
   IO.write(
     "  ", argv.head.head, "\t\t", argv.head.tail.tail.head, " (type flag)\n");
   _helpOptional((void (*)(Tail...))f, argv.tail);
 }
 
-template <class T, class... Tail, class U>
-void _helpOptional(void (*f)(T, Tail...), U& argv) {
-  T data;
+template <class H, class... Tail, class A>
+void _helpOptional(void (*f)(H, Tail...), A& argv) {
+  H data;
 
   IO.write(
     "  ", argv.head.head, "\t\t", argv.head.tail.tail.head, " (type ",
@@ -61,9 +61,9 @@ void _helpOptional(void (*f)(T, Tail...), U& argv) {
 template <class... Tail>
 void returnType(void (*)(Tail...)) {}
 
-template <class T, class... Tail>
-void returnType(T (*)(Tail...)) {
-  T data;
+template <class R, class... Tail>
+void returnType(R (*)(Tail...)) {
+  R data;
 
   IO.write("\nreturns:\n  ", _typeof(data), "\n");
 }
@@ -72,8 +72,8 @@ void returnType(T (*)(Tail...)) {
 /*
  * Help.
  */
-template <class T, class... Tail, class U>
-void _help(T (*f)(Tail...), string name, string descr, U& argv) {
+template <class R, class... Tail, class A>
+void help(R (*f)(Tail...), string name, string descr, A& argv) {
   int req,
       opt;
 
@@ -94,33 +94,25 @@ void _help(T (*f)(Tail...), string name, string descr, U& argv) {
   returnType(f);
 }
 
+template <class C, class R, class P, class... Tail, class A>
+void help(TMEMB t, string name, string descr, A& argv) {
+  help((R (*)(Tail...))t.tail.head, name, descr, argv);
+}
+
 
 /*
  * Help selector.
  */
-void help(string) {}
+void selectHelp(string) {}
 
-template <class C, class R, class P, class... Z, class... Tail, class... Args>
-void help(
-    string name, Tuple<Tuple<C*, R (P::*)(Z...)>, Tail...> t, Args... args) {
+template <class H, class... Tail>
+void selectHelp(string name, H t, Tail... args) {
   if (t.tail.head == name) {
-    _help(
-      (R (*)(Z...))t.head.tail.head, t.tail.head, t.tail.tail.head,
-      t.tail.tail.tail);
+    help(t.head, t.tail.head, t.tail.tail.head, t.tail.tail.tail);
     return;
   }
 
-  help(name, args...);
-}
-
-template <class T, class... Args>
-void help(string name, T t, Args... args) {
-  if (t.tail.head == name) {
-    _help(t.head, t.tail.head, t.tail.tail.head, t.tail.tail.tail);
-    return;
-  }
-
-  help(name, args...);
+  selectHelp(name, args...);
 }
 
 
@@ -129,8 +121,8 @@ void help(string name, T t, Args... args) {
  */
 void describe(void) {}
 
-template <class T, class... Args>
-void describe(T t, Args... args) {
+template <class H, class... Tail>
+void describe(H t, Tail... args) {
   IO.write(t.tail.head, "\t\t", t.tail.tail.head, "\n");
   describe(args...);
 }

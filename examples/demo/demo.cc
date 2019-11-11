@@ -1,4 +1,4 @@
-#include "../../src/simpleREPL.h"
+#include <simpleREPL.h>
 
 
 string greet(string name) {

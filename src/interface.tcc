@@ -37,6 +37,18 @@ RWIO IO;
  *
  * @return @a true to continue @a false to quit.
  */
+template <class F, class... Args>
+bool interface(F f, const char* name, const char* descr, Args... defs) {
+  Tuple<Args...> t = pack(defs...);
+
+  if (!parse(f, t)) {
+    help(f, name, descr, t);
+  }
+
+  return true;
+}
+
+
 template <class... Args>
 bool interface(Args... args) {
   string command;
@@ -58,7 +70,7 @@ bool interface(Args... args) {
     return true;
   }
   if (command == "help") {
-    help(IO.read(), args...);
+    selectHelp(IO.read(), args...);
     return true;
   }
 

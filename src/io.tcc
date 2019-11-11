@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#define PARG Tuple<const char*, const char*>
+#define PARG Tuple<Tuple<const char*, const char*>, Args...>
 
 using namespace std;
 
@@ -28,11 +28,22 @@ class RWIO {
          _interactive = true;
 };
 
-void _convert(bool*, string);
-void _convert(int*, string);
-void _convert(float*, string);
-void _convert(double*, string);
-void _convert(string*, string);
+void _convert(bool*, string),
+     _convert(char*, string),
+     _convert(signed char*, string),
+     _convert(unsigned char*, string),
+     _convert(short int*, string),
+     _convert(unsigned short int*, string),
+     _convert(int*, string),
+     _convert(unsigned int*, string),
+     _convert(long int*, string),
+     _convert(unsigned long int*, string),
+     _convert(long long int*, string),
+     _convert(unsigned long long int*, string),
+     _convert(float*, string),
+     _convert(double*, string),
+     _convert(long double*, string),
+     _convert(string*, string);
 
 
 /*

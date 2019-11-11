@@ -39,6 +39,14 @@ int main(int argc, char** argv) {
   IO.enableCLI(argc, argv);
 
   interface(
+    f, (const char*)argv[0], "funk the func", 
+      param("-a", 2, "set the int"),
+      param("name", "name the name"),
+      param("-c", true, "flip the flop"),
+      param("-d", 3.14F, "pimp the pi"),
+      param("value", "set the value"));
+/*
+  interface(
     func(pack(&c, &C::i), "i", "class void test",
       param("a", "a")),
     func(f, "f", "funk the func", 
@@ -52,6 +60,7 @@ int main(int argc, char** argv) {
       param("-b", true, "bleep the blop")),
     func(pack(&c, &C::h), "h", "class test")
   );
+  */
 
   return 0;
 }

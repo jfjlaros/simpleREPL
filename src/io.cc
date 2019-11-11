@@ -78,8 +78,48 @@ void _convert(bool* data, string s) {
   *data = (bool)stoi(s);
 }
 
+void _convert(char* data, string s) {
+  *data = (char)stoi(s);
+}
+
+void _convert(signed char* data, string s) {
+  *data = (signed char)stoi(s);
+}
+
+void _convert(unsigned char* data, string s) {
+  *data = (unsigned char)stoi(s);
+}
+
+void _convert(short int* data, string s) {
+  *data = (short int)stoi(s);
+}
+
+void _convert(unsigned short int* data, string s) {
+  *data = (unsigned short int)stoi(s);
+}
+
 void _convert(int* data, string s) {
   *data = stoi(s);
+}
+
+void _convert(unsigned int* data, string s) {
+  *data = (unsigned int)stoi(s);
+}
+
+void _convert(long int* data, string s) {
+  *data = stol(s);
+}
+
+void _convert(unsigned long int* data, string s) {
+  *data = stoul(s);
+}
+
+void _convert(long long int* data, string s) {
+  *data = stoll(s);
+}
+
+void _convert(unsigned long long int* data, string s) {
+  *data = stoull(s);
 }
 
 void _convert(float* data, string s) {
@@ -88,6 +128,10 @@ void _convert(float* data, string s) {
 
 void _convert(double* data, string s) {
   *data = stod(s);
+}
+
+void _convert(long double* data, string s) {
+  *data = stold(s);
 }
 
 void _convert(string* data, string s) {

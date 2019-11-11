@@ -12,18 +12,18 @@ extern RWIO IO;
  */
 inline void _countArgs(Tuple<>&, int& req, int& opt) {}
 
-template <class... Tail>
-void _countArgs(Tuple<PARG, Tail...>& defs, int& req, int& opt) {
+template <class... Args>
+void _countArgs(PARG& defs, int& req, int& opt) {
   _countArgs(defs.tail, ++req, opt);
 }
 
-template <class U>
-void _countArgs(U& defs, int& req, int& opt) {
+template <class D>
+void _countArgs(D& defs, int& req, int& opt) {
   _countArgs(defs.tail, req, ++opt);
 }
 
-template <class U>
-void countArgs(U& defs, int& req, int& opt) {
+template <class D>
+void countArgs(D& defs, int& req, int& opt) {
   _countArgs(defs, req = 0, opt = 0);
 }
 
@@ -33,15 +33,15 @@ void countArgs(U& defs, int& req, int& opt) {
  */
 inline void setDefault(Tuple<>&, Tuple<>&) {}
 
-template <class T, class... Tail>
-void setDefault(T& argv, Tuple<PARG, Tail...>& defs) {
+template <class A, class... Args>
+void setDefault(A& argv, PARG& defs) {
   _convert(&argv.head, "0"); // Not strictly needed, but nice for debugging.
 
   setDefault(argv.tail, defs.tail);
 }
 
-template <class T, class U>
-void setDefault(T& argv, U& defs) {
+template <class A, class D>
+void setDefault(A& argv, D& defs) {
   argv.head = defs.head.tail.head;
 
   setDefault(argv.tail, defs.tail);
@@ -51,28 +51,26 @@ void setDefault(T& argv, U& defs) {
 /*
  * Update a required parameter value.
  */
-inline void _updateRequired(Tuple<>&, Tuple<>&, int, int, string) {}
+inline void _updateRequired(Tuple<>&, Tuple<>&, int, int, string&) {}
 
-template <class T, class... Tail>
-void _updateRequired(
-    T& argv, Tuple<PARG, Tail...>& defs, int number, int count, string value) {
-  if (number == count) {
+template <class A, class... Args>
+void _updateRequired(A& argv, PARG& defs, int num, int count, string& value) {
+  if (num == count) {
     _convert(&argv.head, value);
-
     return;
   }
 
-  _updateRequired(argv.tail, defs.tail, number, count + 1, value);
+  _updateRequired(argv.tail, defs.tail, num, count + 1, value);
 }
 
-template <class T, class U>
-void _updateRequired(T& argv, U& defs, int number, int count, string value) {
-  _updateRequired(argv.tail, defs.tail, number, count, value);
+template <class A, class D>
+void _updateRequired(A& argv, D& defs, int num, int count, string& value) {
+  _updateRequired(argv.tail, defs.tail, num, count, value);
 }
 
-template <class T, class U>
-void updateRequired(T& argv, U& defs, int number, string value) {
-  _updateRequired(argv, defs, number, 0, value);
+template <class A, class D>
+void updateRequired(A& argv, D& defs, int num, string& value) {
+  _updateRequired(argv, defs, num, 0, value);
 }
 
 
@@ -81,22 +79,20 @@ void updateRequired(T& argv, U& defs, int number, string value) {
  */
 inline void updateOptional(Tuple<>&, Tuple<>&, string) {}
 
-template <class... Tail, class U>
-void updateOptional(Tuple<bool, Tail...>& argv, U& defs, string name) {
+template <class... Args, class D>
+void updateOptional(Tuple<bool, Args...>& argv, D& defs, string name) {
   if (defs.head.head == name) {
     argv.head = !argv.head;
-
     return;
   }
 
   updateOptional(argv.tail, defs.tail, name);
 }
 
-template <class T, class... Tail, class U>
-void updateOptional(Tuple<T, Tail...>& argv, U& defs, string name) {
+template <class T, class... Args, class D>
+void updateOptional(Tuple<T, Args...>& argv, D& defs, string name) {
   if (defs.head.head == name) {
     _convert(&argv.head, IO.read());
-
     return;
   }
 
