@@ -11,7 +11,7 @@
  */
 void _helpRequired(void (*)(void), Tuple<>&) {}
 
-template <class H, class... Tail, class... Args>
+template <class H, class... Tail, PARG_T>
 void _helpRequired(void (*f)(H, Tail...), PARG& argv) {
   H data;
 
@@ -32,7 +32,7 @@ void _helpRequired(void (*f)(H, Tail...), U& argv) {
  */
 void _helpOptional(void (*)(void), Tuple<>&) {}
 
-template <class H, class... Tail, class... Args>
+template <class H, class... Tail, PARG_T>
 void _helpOptional(void (*f)(H, Tail...), PARG& argv) {
   _helpOptional((void (*)(Tail...))f, argv.tail);
 }
@@ -94,7 +94,7 @@ void help(R (*f)(Tail...), string name, string descr, A& argv) {
   returnType(f);
 }
 
-template <class C, class R, class P, class... Tail, class A>
+template <TMEMB_T, class A>
 void help(TMEMB t, string name, string descr, A& argv) {
   help((R (*)(Tail...))t.tail.head, name, descr, argv);
 }

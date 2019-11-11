@@ -22,7 +22,7 @@
  *
  * @private
  */
-template <class C, class P, class... Tail, class... Args>
+template <VMEMB_T, class... Args>
 void _call(void (*)(void), VMEMB t, Tuple<>&, Args&... args) {
   (*t.head.*t.tail.head)(args...);
 }
@@ -32,7 +32,7 @@ void _call(void (*)(void), void (*f)(Tail...), Tuple<>&, Args&... args) {
   f(args...);
 }
 
-template <class C, class R, class P, class... Tail, class... Args>
+template <TMEMB_T, class... Args>
 void _call(void (*)(void), TMEMB t, Tuple<>&, Args&... args) {
   IO.write((*t.head.*t.tail.head)(args...), "\n");
 }
@@ -47,7 +47,7 @@ void _call(void (*f_)(H, Tail...), F f, U& argv, Args&... args) {
   _call((void (*)(Tail...))f_, f, argv.tail, args..., argv.head);
 }
 
-template <class C, class R, class P, class... Tail, class U>
+template <TMEMB_T, class U>
 void call(TMEMB t, U& argv) {
   _call((void (*)(Tail...))t.head, t, argv);
 }
@@ -99,7 +99,7 @@ bool _parse(F f, U& defs, V& argv) {
   return true;
 }
 
-template <class C, class P, class R, class... Tail, class U>
+template <TMEMB_T, class U>
 bool parse(TMEMB t, U defs) {
   Tuple<Tail...> argv;
 

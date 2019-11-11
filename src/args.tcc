@@ -12,7 +12,7 @@ extern RWIO IO;
  */
 inline void _countArgs(Tuple<>&, int& req, int& opt) {}
 
-template <class... Args>
+template <PARG_T>
 void _countArgs(PARG& defs, int& req, int& opt) {
   _countArgs(defs.tail, ++req, opt);
 }
@@ -33,17 +33,15 @@ void countArgs(D& defs, int& req, int& opt) {
  */
 inline void setDefault(Tuple<>&, Tuple<>&) {}
 
-template <class A, class... Args>
+template <class A, PARG_T>
 void setDefault(A& argv, PARG& defs) {
   _convert(&argv.head, "0"); // Not strictly needed, but nice for debugging.
-
   setDefault(argv.tail, defs.tail);
 }
 
 template <class A, class D>
 void setDefault(A& argv, D& defs) {
   argv.head = defs.head.tail.head;
-
   setDefault(argv.tail, defs.tail);
 }
 
@@ -53,7 +51,7 @@ void setDefault(A& argv, D& defs) {
  */
 inline void _updateRequired(Tuple<>&, Tuple<>&, int, int, string&) {}
 
-template <class A, class... Args>
+template <class A, PARG_T>
 void _updateRequired(A& argv, PARG& defs, int num, int count, string& value) {
   if (num == count) {
     _convert(&argv.head, value);
@@ -79,8 +77,8 @@ void updateRequired(A& argv, D& defs, int num, string& value) {
  */
 inline void updateOptional(Tuple<>&, Tuple<>&, string) {}
 
-template <class... Args, class D>
-void updateOptional(Tuple<bool, Args...>& argv, D& defs, string name) {
+template <class... Tail, class D>
+void updateOptional(Tuple<bool, Tail...>& argv, D& defs, string name) {
   if (defs.head.head == name) {
     argv.head = !argv.head;
     return;
@@ -89,8 +87,8 @@ void updateOptional(Tuple<bool, Args...>& argv, D& defs, string name) {
   updateOptional(argv.tail, defs.tail, name);
 }
 
-template <class T, class... Args, class D>
-void updateOptional(Tuple<T, Args...>& argv, D& defs, string name) {
+template <class H, class... Tail, class D>
+void updateOptional(Tuple<H, Tail...>& argv, D& defs, string name) {
   if (defs.head.head == name) {
     _convert(&argv.head, IO.read());
     return;

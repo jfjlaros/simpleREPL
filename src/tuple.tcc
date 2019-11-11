@@ -7,7 +7,10 @@
  * @a Tuple and @a Object definitions and manipulation functions.
  */
 
+#define VMEMB_T class C, class P, class... Tail
 #define VMEMB Tuple<C*, void (P::*)(Tail...)>
+
+#define TMEMB_T class C, class R, class P, class... Tail
 #define TMEMB Tuple<C*, R (P::*)(Tail...)>
 
 /**
