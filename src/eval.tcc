@@ -67,8 +67,11 @@ void call(T (*f)(Tail...), U& argv) {
 template <class T, class U, class V>
 void _parse(T f, const char* name, string descr, U& defs, V& argv) {
   string token = "";
-  int requiredParameters = setDefault(argv, defs),
+  int req,
+      opt,
       number = 0;
+
+  setDefault(argv, defs);
 
   while (!IO.eol()) {
     token = IO.read();
@@ -82,10 +85,12 @@ void _parse(T f, const char* name, string descr, U& defs, V& argv) {
     }
   }
 
-  if (number == requiredParameters) {
+  countArgs(defs, req, opt);
+
+  if (number == req) {
     call(f, argv);
   }
-  else if (number > requiredParameters) {
+  else if (number > req) {
     IO.write("Too many parameters provided.\n");
   }
   else {

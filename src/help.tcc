@@ -74,13 +74,22 @@ void returnType(T (*)(Tail...)) {
  */
 template <class T, class... Tail, class U>
 void _help(T (*f)(Tail...), string name, string descr, U& argv) {
-  IO.write(name, ": ", descr, "\n\n");
+  int req,
+      opt;
 
-  IO.write("positional arguments:\n");
-  _helpRequired((void (*)(Tail...))f, argv);
+  IO.write(name, ": ", descr, "\n");
 
-  IO.write("\noptional arguments:\n");
-  _helpOptional((void (*)(Tail...))f, argv);
+  countArgs(argv, req, opt);
+
+  if (req) {
+    IO.write("\npositional arguments:\n");
+    _helpRequired((void (*)(Tail...))f, argv);
+  }
+
+  if (opt) {
+    IO.write("\noptional arguments:\n");
+    _helpOptional((void (*)(Tail...))f, argv);
+  }
 
   returnType(f);
 }

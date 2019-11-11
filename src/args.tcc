@@ -8,29 +8,43 @@ extern RWIO IO;
 
 
 /*
+ * Count parameters.
+ */
+inline void _countArgs(Tuple<>&, int& req, int& opt) {}
+
+template <class... Tail>
+void _countArgs(Tuple<PARG, Tail...>& defs, int& req, int& opt) {
+  _countArgs(defs.tail, ++req, opt);
+}
+
+template <class U>
+void _countArgs(U& defs, int& req, int& opt) {
+  _countArgs(defs.tail, req, ++opt);
+}
+
+template <class U>
+void countArgs(U& defs, int& req, int& opt) {
+  _countArgs(defs, req = 0, opt = 0);
+}
+
+
+/*
  * Set default values and count the number of required parameters.
  */
-inline int _setDefault(Tuple<>&, Tuple<>&, int count) {
-  return count;
-}
+inline void setDefault(Tuple<>&, Tuple<>&) {}
 
 template <class T, class... Tail>
-int _setDefault(T& argv, Tuple<PARG, Tail...>& defs, int count) {
+void setDefault(T& argv, Tuple<PARG, Tail...>& defs) {
   _convert(&argv.head, "0"); // Not strictly needed, but nice for debugging.
 
-  return _setDefault(argv.tail, defs.tail, count + 1);
+  setDefault(argv.tail, defs.tail);
 }
 
 template <class T, class U>
-int _setDefault(T& argv, U& defs, int count) {
+void setDefault(T& argv, U& defs) {
   argv.head = defs.head.tail.head;
 
-  return _setDefault(argv.tail, defs.tail, count);
-}
-
-template <class T, class U>
-int setDefault(T& argv, U& defs) {
-  return _setDefault(argv, defs, 0);
+  setDefault(argv.tail, defs.tail);
 }
 
 
